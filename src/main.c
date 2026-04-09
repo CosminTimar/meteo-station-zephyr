@@ -2,6 +2,7 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/kernel.h>
 #include <zephyr/random/random.h>
+#include "../drivers/i2c/sensors.h"
 
 
 #define I2C_NODE DT_NODELABEL(mysensor)
@@ -64,7 +65,7 @@ static K_THREAD_STACK_DEFINE(my_stack_area, WORQ_THREAD_STACK_SIZE);
 K_SEM_DEFINE(instance_monitor_sem, 10, 10);
 
 /* Read sensor calibration data and stores these into sensor data */
-/*void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr)
+void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr)
 {
 	
 	
@@ -260,40 +261,71 @@ K_THREAD_DEFINE(thread1_id, STACKSIZE, thread1, NULL, NULL, NULL,
 	THREAD1_PRIORITY, 0, 5000);
 
 
-int main(void)
+#define I2C_DEVICE_NOT_READY_ERROR	(0xA0)
+#define I2C_READ_WRITE_ERROR		(0xA1)
+#define I2C_CHIP_ID_INVALID			(0xA2)
+#define I2C_NO_ERROR				(0x00)
+
+static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_NODE);
+
+uint8_t config_i2c_driver(struct i2c_dt_spec dev_i2c)
 {
-	/*static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_NODE);
 	if (!device_is_ready(dev_i2c.bus)) {
 		printk("I2C bus %s is not ready!\n\r",dev_i2c.bus->name);
-		return -1;
+		return I2C_DEVICE_NOT_READY_ERROR;
 	}
+	return I2C_NO_ERROR;
+}
 
+uint8_t i2c_read_sensor_id(uint8_t* chipId)
+{
 	uint8_t id = 0;
-	uint8_t regs[] = {ID};
-
-	int ret = i2c_write_read_dt(&dev_i2c, regs, 1, &id, 1);
+	int ret = i2c_write_read_dt(&dev_i2c, chipId, 1, &id, 1);
 
 	if (ret != 0) {
-		printk("Failed to read register %x \n", regs[0]);
-		return -1;
+		printk("Failed to read register %x \n", chipId[0]);
+		return I2C_READ_WRITE_ERROR;
 	}
 
 	if (id != CHIP_ID) {
 		printk("Invalid chip id! %x \n", id);
-		return -1;
+		return I2C_CHIP_ID_INVALID;
 	}
+	return I2C_NO_ERROR;
+}
 
+uint8_t bme_sensor_config()
+{
 	bme_calibrationdata(&dev_i2c, &bmedata);
 
 	uint8_t sensor_config[] = {CTRLMEAS, SENSOR_CONFIG_VALUE};
 
-	ret = i2c_write_dt(&dev_i2c, sensor_config, 2);
+	int ret = i2c_write_dt(&dev_i2c, sensor_config, 2);
 
 	if (ret != 0) {
 		printk("Failed to write register %x \n", sensor_config[0]);
 		return -1;
 	}
+}
 
+void choice_sensor(uint8_t* chipId)
+{
+	i2c_read_sensor_id(chipId);
+}
+
+int main(void)
+{
+	uint8_t regs[] = {ID};
+	uint8_t error = config_i2c_driver(dev_i2c);
+	
+	if(I2C_NO_ERROR != error)
+	{
+		return -1;
+	}
+
+	choice_sensor(regs);
+
+	/*
 	while(1)
 	{
 		uint8_t temp_val[3] = {0};
