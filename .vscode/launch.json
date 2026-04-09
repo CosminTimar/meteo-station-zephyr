@@ -1,0 +1,12 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "nrf-connect",
+			"request": "launch",
+			"name": "Launch hello_world/build/hello_world",
+			"config": "${workspaceFolder}/build/hello_world",
+			"runToEntryPoint": "main"
+		}
+	]
+}
