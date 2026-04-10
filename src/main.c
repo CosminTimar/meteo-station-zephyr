@@ -1,19 +1,12 @@
-#include <zephyr/drivers/i2c.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/kernel.h>
 #include <zephyr/random/random.h>
-#include "../drivers/i2c/sensors.h"
+#include "bme_sensor/bme_sensor.h"
 
 
-#define I2C_NODE DT_NODELABEL(mysensor)
 
-#define CTRLMEAS 0xF4
-#define CALIB00	 0x88
-#define ID	     0xD0
-#define TEMPMSB	 0xFA
-#define PRESMSB	 0xF7
-#define CHIP_ID  0x60
-#define SENSOR_CONFIG_VALUE 0x93
+
+
 #define SLEEP_TIME_MS 1000
 
 #define STACKSIZE 1024
@@ -35,23 +28,7 @@ K_MUTEX_DEFINE(test_mutex);
 
 volatile uint32_t available_instance_count = 10;
 
-/* Data structure to store BME280 data */
-struct bme280_data {
-	/* Compensation for Temperature */
-	uint16_t dig_t1;
-	int16_t dig_t2;
-	int16_t dig_t3;
-	/* Compensation for Presure*/
-	uint16_t dig_p1;
-	int16_t dig_p2;
-	int16_t dig_p3;
-	int16_t dig_p4;
-	int16_t dig_p5;
-	int16_t dig_p6;
-	int16_t dig_p7;
-	int16_t dig_p8;
-	int16_t dig_p9;
-} bmedata;
+
 
 struct work_info {
     struct k_work work;
@@ -64,77 +41,8 @@ static K_THREAD_STACK_DEFINE(my_stack_area, WORQ_THREAD_STACK_SIZE);
 
 K_SEM_DEFINE(instance_monitor_sem, 10, 10);
 
-/* Read sensor calibration data and stores these into sensor data */
-void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr)
-{
-	
-	
-	uint8_t values[24];
 
-	int ret = i2c_burst_read_dt(spec, CALIB00, values, 24);
 
-	if (ret != 0) {
-		printk("Failed to read register %x \n", CALIB00);
-		return;
-	}
-
-	sensor_data_ptr->dig_t1 = ((uint16_t)values[1]) << 8 | values[0];
-	sensor_data_ptr->dig_t2 = ((uint16_t)values[3]) << 8 | values[2];
-	sensor_data_ptr->dig_t3 = ((uint16_t)values[5]) << 8 | values[4];
-	sensor_data_ptr->dig_p1 = ((uint16_t)values[7]) << 8 | values[6];
-	sensor_data_ptr->dig_p2 = ((uint16_t)values[9]) << 8 | values[8];
-	sensor_data_ptr->dig_p3 = ((uint16_t)values[11]) << 8 | values[10];
-	sensor_data_ptr->dig_p4 = ((uint16_t)values[13]) << 8 | values[12];
-	sensor_data_ptr->dig_p5 = ((uint16_t)values[15]) << 8 | values[14];
-	sensor_data_ptr->dig_p6 = ((uint16_t)values[17]) << 8 | values[16];
-	sensor_data_ptr->dig_p7 = ((uint16_t)values[19]) << 8 | values[18];
-	sensor_data_ptr->dig_p8 = ((uint16_t)values[21]) << 8 | values[20];
-	sensor_data_ptr->dig_p9 = ((uint16_t)values[23]) << 8 | values[22];
-
-}
-
-int32_t t_fine;
-
-/* Compensate current temperature using previously stored sensor calibration data 
-static int32_t bme280_compensate_temp(struct bme280_data *data, int32_t adc_temp)
-{
-	int32_t var1, var2;
-
-	var1 = (((adc_temp >> 3) - ((int32_t)data->dig_t1 << 1)) * ((int32_t)data->dig_t2)) >> 11;
-
-	var2 = (((((adc_temp >> 4) - ((int32_t)data->dig_t1)) *
-		  ((adc_temp >> 4) - ((int32_t)data->dig_t1))) >>
-		 12) *
-		((int32_t)data->dig_t3)) >>
-	       14;
-
-	t_fine = var1 + var2;
-	return ((var1 + var2) * 5 + 128) >> 8;
-}
-
-/* Compensate current temperature using previously stored sensor calibration data 
-static int32_t bme280_compensate_pres(struct bme280_data *data, int32_t adc_pres)
-{
-	int64_t var1, var2, p;
-
-	var1 = ((int64_t)t_fine) - 128000;
-	var2 = var1 * var1 * (int64_t)data->dig_p6;
-	var2 = var2 + ((var1*(int64_t)data->dig_p5)<<17);
-	var2 = var2 + (((int64_t)data->dig_p4)<<35);
-	var1 = ((var1 * var1 * (int64_t)data->dig_p3)>>8) + ((var1 * (int64_t)data->dig_p2)<<12);
-	var1 = (((((int64_t)1)<<47)+var1))*((int64_t)data->dig_p1)>>33;
-	if (var1 == 0)
-	{
-	return 0; // avoid exception caused by division by zero
-	}
-	p = 1048576-adc_pres;
-	p = (((p<<31)-var2)*3125)/var1;
-	var1 = (((int64_t)data->dig_p9) * (p>>13) * (p>>13)) >> 25;
-	var2 = (((int64_t)data->dig_p8) * p) >> 19;
-	p = ((p + var1 + var2) >> 8) + (((int64_t)data->dig_p7)<<4);
-
-	return (int32_t)p;
-}*/
 
 static inline void emulate_work()
 {
@@ -266,8 +174,7 @@ K_THREAD_DEFINE(thread1_id, STACKSIZE, thread1, NULL, NULL, NULL,
 #define I2C_CHIP_ID_INVALID			(0xA2)
 #define I2C_NO_ERROR				(0x00)
 
-static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_NODE);
-
+/*
 uint8_t config_i2c_driver(struct i2c_dt_spec dev_i2c)
 {
 	if (!device_is_ready(dev_i2c.bus)) {
@@ -275,12 +182,12 @@ uint8_t config_i2c_driver(struct i2c_dt_spec dev_i2c)
 		return I2C_DEVICE_NOT_READY_ERROR;
 	}
 	return I2C_NO_ERROR;
-}
+}*/
 
 uint8_t i2c_read_sensor_id(uint8_t* chipId)
 {
 	uint8_t id = 0;
-	int ret = i2c_write_read_dt(&dev_i2c, chipId, 1, &id, 1);
+	int ret ;//= i2c_write_read_dt(&dev_i2c, chipId, 1, &id, 1);
 
 	if (ret != 0) {
 		printk("Failed to read register %x \n", chipId[0]);
@@ -296,11 +203,11 @@ uint8_t i2c_read_sensor_id(uint8_t* chipId)
 
 uint8_t bme_sensor_config()
 {
-	bme_calibrationdata(&dev_i2c, &bmedata);
+	//bme_calibrationdata(&dev_i2c, &bmedata);
 
 	uint8_t sensor_config[] = {CTRLMEAS, SENSOR_CONFIG_VALUE};
 
-	int ret = i2c_write_dt(&dev_i2c, sensor_config, 2);
+	int ret ;//= i2c_write_dt(&dev_i2c, sensor_config, 2);
 
 	if (ret != 0) {
 		printk("Failed to write register %x \n", sensor_config[0]);
@@ -315,7 +222,7 @@ void choice_sensor(uint8_t* chipId)
 
 int main(void)
 {
-	uint8_t regs[] = {ID};
+	/*uint8_t regs[] = {ID};
 	uint8_t error = config_i2c_driver(dev_i2c);
 	
 	if(I2C_NO_ERROR != error)
@@ -323,46 +230,10 @@ int main(void)
 		return -1;
 	}
 
-	choice_sensor(regs);
+	choice_sensor(regs);*/
 
-	/*
-	while(1)
-	{
-		uint8_t temp_val[3] = {0};
-		int ret = i2c_burst_read_dt(&dev_i2c, TEMPMSB, temp_val, 3);
 
-		if (ret != 0) {
-			printk("Failed to read register %x \n", TEMPMSB);
-			k_msleep(SLEEP_TIME_MS);
-			continue;
-		}
-
-		uint8_t press_val[3] = {0};
-		ret = i2c_burst_read_dt(&dev_i2c, PRESMSB, press_val, 3);
-		if (ret != 0) {
-			printk("Failed to read register %x \n", PRESMSB);
-			k_msleep(SLEEP_TIME_MS);
-			continue;
-		}
-
-		int32_t adc_temp =
-			(temp_val[0] << 12) | (temp_val[1] << 4) | ((temp_val[2] >> 4) & 0x0F);
-
-		int32_t adc_pres =
-			(press_val[0] << 12) | (press_val[1] << 4) | ((press_val[2] >> 4) & 0x0F);
-
-		int32_t comp_temp = bme280_compensate_temp(&bmedata, adc_temp);
-		int32_t comp_pres = bme280_compensate_pres(&bmedata, adc_pres);
-
-		float pressure = (float)(comp_pres /256) / 100.0f;
-
-		float temperature = (float)comp_temp / 100.0f;
 	
-		printk("Temperature in Celsius : %8.2f C\n", (double)temperature);
-		printk("Pressure in hPa is : %.2f hPa\n", (double)pressure);
-
-		k_msleep(SLEEP_TIME_MS);
-	}*/
 
 	return 0;
 }

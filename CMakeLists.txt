@@ -7,4 +7,4 @@ project(hello_world)
 
 target_sources(app PRIVATE src/main.c)
 
-add_subdirectory(drivers)
+add_subdirectory(src/bme_sensor)
