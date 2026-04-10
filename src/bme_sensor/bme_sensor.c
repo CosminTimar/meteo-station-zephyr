@@ -9,10 +9,11 @@
 static int32_t t_fine;
 static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_BME_NODE);
 
+struct bme280_data bmedata;
+
 /* Read sensor calibration data and stores these into sensor data */
-void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr)
+static void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr)
 {
-	
 	
 	uint8_t values[24];
 
@@ -79,15 +80,8 @@ static int32_t bme280_compensate_pres(struct bme280_data *data, int32_t adc_pres
 	return (int32_t)p;
 }
 
-void bme_init(void)
-{
-
-}
-
 void bme_worker(void)
 {
-
-    struct bme280_data bmedata;
     while(1)
 	{
 		uint8_t temp_val[3] = {0};
@@ -125,4 +119,31 @@ void bme_worker(void)
 
 		k_msleep(SLEEP_TIME_MS);
 	}
+}
+
+void bme_init(void)
+{
+    uint8_t regs[] = {ID_REG};
+	uint8_t error = config_i2c_driver(dev_i2c);
+
+    if(I2C_NO_ERROR != error)
+	{
+		return 0;
+	}   
+
+    error = i2c_read_sensor_id(regs, CHIP_ID, &dev_i2c);
+    if(I2C_NO_ERROR != error)
+	{
+		return 0;
+	}   
+
+    bme_calibrationdata(&dev_i2c,&bmedata);
+
+    error = i2c_sensor_config(CTRLMEAS,SENSOR_CONFIG_VALUE, &dev_i2c);
+    if(I2C_NO_ERROR != error)
+	{
+		return 0;
+	}   
+
+    bme_worker();   
 }

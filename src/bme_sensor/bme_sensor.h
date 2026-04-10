@@ -1,15 +1,17 @@
-#ifndef BME_SENSORS
-#define BME_SENSORS
+#ifndef BME_SENSORS_HEADER
+#define BME_SENSORS_HEADER
 
 #include <zephyr/drivers/i2c.h>
+#include "../util/util.h"
 
-#define CTRLMEAS                0xF4
-#define CALIB00	                0x88
-#define ID	                    0xD0
-#define TEMPMSB	                0xFA
-#define PRESMSB	                0xF7
-#define CHIP_ID                 0x60
-#define SENSOR_CONFIG_VALUE     0x93
+#define CTRLMEAS                (0xF4)
+#define CALIB00	                (0x88)
+#define ID_REG	                (0xD0)
+#define TEMPMSB	                (0xFA)
+#define PRESMSB	                (0xF7)
+#define CHIP_ID                 (0x60)
+#define SENSOR_CONFIG_VALUE     (0x93)
+#define CHIP_ID                 (0x60)
 
 #define SLEEP_TIME_MS           1000
 
@@ -32,13 +34,6 @@ struct bme280_data {
 };
 
 
-/* Read sensor calibration data and stores these into sensor data */
-void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr);
-
-/* Compensate current temperature using previously stored sensor calibration data */
-static int32_t bme280_compensate_temp(struct bme280_data *data, int32_t adc_temp);
-
-/* Compensate current temperature using previously stored sensor calibration data */
-static int32_t bme280_compensate_pres(struct bme280_data *data, int32_t adc_pres);
+void bme_init(void);
 
 #endif

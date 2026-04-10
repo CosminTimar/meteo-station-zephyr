@@ -163,77 +163,15 @@ void producer(void)
 	}
 }
 
-K_THREAD_DEFINE(thread0_id, STACKSIZE, thread0, NULL, NULL, NULL,
-	THREAD0_PRIORITY, 0, 5000);
-K_THREAD_DEFINE(thread1_id, STACKSIZE, thread1, NULL, NULL, NULL,
-	THREAD1_PRIORITY, 0, 5000);
+//K_THREAD_DEFINE(thread0_id, STACKSIZE, thread0, NULL, NULL, NULL, THREAD0_PRIORITY, 0, 5000);
+//K_THREAD_DEFINE(thread1_id, STACKSIZE, thread1, NULL, NULL, NULL,	THREAD1_PRIORITY, 0, 5000);
 
 
-#define I2C_DEVICE_NOT_READY_ERROR	(0xA0)
-#define I2C_READ_WRITE_ERROR		(0xA1)
-#define I2C_CHIP_ID_INVALID			(0xA2)
-#define I2C_NO_ERROR				(0x00)
-
-/*
-uint8_t config_i2c_driver(struct i2c_dt_spec dev_i2c)
-{
-	if (!device_is_ready(dev_i2c.bus)) {
-		printk("I2C bus %s is not ready!\n\r",dev_i2c.bus->name);
-		return I2C_DEVICE_NOT_READY_ERROR;
-	}
-	return I2C_NO_ERROR;
-}*/
-
-uint8_t i2c_read_sensor_id(uint8_t* chipId)
-{
-	uint8_t id = 0;
-	int ret ;//= i2c_write_read_dt(&dev_i2c, chipId, 1, &id, 1);
-
-	if (ret != 0) {
-		printk("Failed to read register %x \n", chipId[0]);
-		return I2C_READ_WRITE_ERROR;
-	}
-
-	if (id != CHIP_ID) {
-		printk("Invalid chip id! %x \n", id);
-		return I2C_CHIP_ID_INVALID;
-	}
-	return I2C_NO_ERROR;
-}
-
-uint8_t bme_sensor_config()
-{
-	//bme_calibrationdata(&dev_i2c, &bmedata);
-
-	uint8_t sensor_config[] = {CTRLMEAS, SENSOR_CONFIG_VALUE};
-
-	int ret ;//= i2c_write_dt(&dev_i2c, sensor_config, 2);
-
-	if (ret != 0) {
-		printk("Failed to write register %x \n", sensor_config[0]);
-		return -1;
-	}
-}
-
-void choice_sensor(uint8_t* chipId)
-{
-	i2c_read_sensor_id(chipId);
-}
 
 int main(void)
 {
-	/*uint8_t regs[] = {ID};
-	uint8_t error = config_i2c_driver(dev_i2c);
-	
-	if(I2C_NO_ERROR != error)
-	{
-		return -1;
-	}
 
-	choice_sensor(regs);*/
-
-
-	
+	bme_init();
 
 	return 0;
 }
