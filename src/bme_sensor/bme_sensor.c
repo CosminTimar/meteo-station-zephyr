@@ -5,11 +5,10 @@
 
 #define I2C_BME_NODE DT_NODELABEL(mysensor)
 
-
-static int32_t t_fine;
 static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_BME_NODE);
 
 struct bme280_data bmedata;
+static int32_t t_fine;
 
 /* Read sensor calibration data and stores these into sensor data */
 static void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr)

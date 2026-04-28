@@ -5,8 +5,6 @@
 
 
 
-
-
 #define SLEEP_TIME_MS 1000
 
 #define STACKSIZE 1024
@@ -40,8 +38,6 @@ static struct k_work_q offload_work_q = {0};
 static K_THREAD_STACK_DEFINE(my_stack_area, WORQ_THREAD_STACK_SIZE);
 
 K_SEM_DEFINE(instance_monitor_sem, 10, 10);
-
-
 
 
 static inline void emulate_work()
