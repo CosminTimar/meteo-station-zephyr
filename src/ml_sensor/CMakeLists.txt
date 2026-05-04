@@ -1,0 +1,1 @@
+target_sources(app PRIVATE ml_sensor.c)
