@@ -68,7 +68,7 @@ static int32_t bme280_compensate_pres(struct bme280_data *data, int32_t adc_pres
 	var1 = (((((int64_t)1)<<47)+var1))*((int64_t)data->dig_p1)>>33;
 	if (var1 == 0)
 	{
-	return 0; // avoid exception caused by division by zero
+	return 0; // avoid exception caused by division by zerorefactor
 	}
 	p = 1048576-adc_pres;
 	p = (((p<<31)-var2)*3125)/var1;
@@ -89,7 +89,6 @@ void bme_worker(void)
 		if (ret != 0) {
 			printk("Failed to read register %x \n", TEMPMSB);
 			k_msleep(SLEEP_TIME_MS);
-			continue;
 		}
 
 		uint8_t press_val[3] = {0};
@@ -97,7 +96,6 @@ void bme_worker(void)
 		if (ret != 0) {
 			printk("Failed to read register %x \n", PRESMSB);
 			k_msleep(SLEEP_TIME_MS);
-			continue;
 		}
 
 		int32_t adc_temp =
@@ -127,13 +125,13 @@ void bme_init(void)
 
     if(I2C_NO_ERROR != error)
 	{
-		return 0;
+		return;
 	}   
 
     error = i2c_read_sensor_id(regs, CHIP_ID, &dev_i2c);
     if(I2C_NO_ERROR != error)
 	{
-		return 0;
+		return;
 	}   
 
     bme_calibrationdata(&dev_i2c,&bmedata);
@@ -141,7 +139,7 @@ void bme_init(void)
     error = i2c_sensor_config(CTRLMEAS,SENSOR_CONFIG_VALUE, &dev_i2c);
     if(I2C_NO_ERROR != error)
 	{
-		return 0;
+		return;
 	}   
 
     bme_worker();   
