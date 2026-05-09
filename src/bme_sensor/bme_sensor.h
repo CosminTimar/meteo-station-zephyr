@@ -11,7 +11,6 @@
 #define PRESMSB	                (0xF7)
 #define CHIP_ID                 (0x60)
 #define SENSOR_CONFIG_VALUE     (0x93)
-#define CHIP_ID                 (0x60)
 
 #define SLEEP_TIME_MS           1000
 

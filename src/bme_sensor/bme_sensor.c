@@ -3,7 +3,7 @@
 #include <zephyr/sys/printk.h>
 #include "bme_sensor.h"
 
-#define I2C_BME_NODE DT_NODELABEL(mysensor)
+#define I2C_BME_NODE DT_NODELABEL(bme_sensor)
 
 static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_BME_NODE);
 
@@ -11,12 +11,12 @@ struct bme280_data bmedata;
 static int32_t t_fine;
 
 /* Read sensor calibration data and stores these into sensor data */
-static void bme_calibrationdata(const struct i2c_dt_spec *spec, struct bme280_data *sensor_data_ptr)
+static void bme_calibrationdata(struct bme280_data *sensor_data_ptr)
 {
 	
 	uint8_t values[24];
 
-	int ret = i2c_burst_read_dt(spec, CALIB00, values, 24);
+	int ret = i2c_burst_read_dt(&dev_i2c, CALIB00, values, 24);
 
 	if (ret != 0) {
 		printk("Failed to read register %x \n", CALIB00);
@@ -134,7 +134,7 @@ void bme_init(void)
 		return;
 	}   
 
-    bme_calibrationdata(&dev_i2c,&bmedata);
+    bme_calibrationdata(&bmedata);
 
     error = i2c_sensor_config(CTRLMEAS,SENSOR_CONFIG_VALUE, &dev_i2c);
     if(I2C_NO_ERROR != error)
