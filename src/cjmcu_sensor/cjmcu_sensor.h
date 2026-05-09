@@ -5,9 +5,9 @@
 #include "../util/util.h"
 
 
-#define CHIP_ID_LOW     (0x7A)
-#define CHIP_ID_HIGH    (0x7B)
+#define WH_ID               (0x81)
 
+/* Application registers */
 #define STATUS_REG_R        (0x00)
 #define MEAS_MODE_RW        (0x01)
 #define ALG_RESULT_DATA     (0x02)
@@ -22,13 +22,8 @@
 #define ERROR_ID_R          (0xE0)
 #define SW_RESET_W          (0xFF)
 
-
-struct status{
-    uint8 fw_mode;
-    uint8 app_valid;
-    uint8 data_ready;
-    uint8 error;
-};
+/* Bootloader registers */
+#define BL_START_APP_W      (0xF4)
 
 
 struct measure_mode{
@@ -37,9 +32,9 @@ struct measure_mode{
     uint8 threshold_int;
 };
 
-struct algo_resut{
-    uint8 co2_data;
-    uint8 volatile_organic_compound;
+struct measurement_resut{
+    uint16 co2_data;
+    uint16 volatile_organic_compound;
     uint8 status;
     uint8 error;
     uint8 raw_data;
@@ -56,6 +51,27 @@ struct env_data{
     uint8 temperature_low;
     uint8 temperature_high;
 };
+
+struct threshold{
+    uint16 low_to_medium_thr;
+    uint16 medium_to_high_thr;
+    uint32 hysteresis;
+};
+
+struct baseline{
+    uint16 baseline;
+};
+
+struct hw_id{
+    uint8 hw_id;
+};
+
+struct error_id{
+    uint8 error_code;
+};
+
+
+void cjmcu_init(void);
 
 
 
