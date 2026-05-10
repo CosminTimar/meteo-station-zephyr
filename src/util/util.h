@@ -1,6 +1,9 @@
 #ifndef UTIL_HEADER
 #define UTIL_HEADER
 
+#include <zephyr/sys/printk.h>
+#include <zephyr/drivers/i2c.h>
+
 
 typedef unsigned char 		uint8;
 typedef unsigned short 		uint16;
@@ -15,6 +18,13 @@ typedef enum{
 	I2C_READ_WRITE_ERROR,
 	I2C_CHIP_ID_INVALID,
 }i2c_error;
+
+typedef enum
+{
+    ADC_NO_ERROR = 0,
+    ADC_INTERNAL_ERROR,
+	ADC_CONVERSION_IN_PROGRESS = 16,
+}adc_error;
 
 
 i2c_error config_i2c_driver(struct i2c_dt_spec dev_i2c);
