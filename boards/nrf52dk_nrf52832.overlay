@@ -46,10 +46,16 @@
     /* Add I2C frequency */
     clock-frequency = <I2C_BITRATE_STANDARD>;
     
-    mysensor: mysensor@76{
+    bme_sensor: bme_sensor@76{
         compatible = "i2c-device";
         status = "okay";
         reg = < 0x76 >;
+    };
+
+    cjmcu_sensor: cjmcu_sensor@5a{
+        compatible = "i2c-device";
+        status = "okay";
+        reg = < 0x5a >;
     };
 };
 

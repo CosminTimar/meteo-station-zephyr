@@ -2,6 +2,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/random/random.h>
 #include "bme_sensor/bme_sensor.h"
+#include "cjmcu_sensor/cjmcu_sensor.h"
 
 
 

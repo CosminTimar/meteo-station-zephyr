@@ -1,19 +1,28 @@
 #ifndef UTIL_HEADER
 #define UTIL_HEADER
 
-#include <zephyr/kernel.h>
-#include <zephyr/drivers/i2c.h>
 
-#define I2C_DEVICE_NOT_READY_ERROR	(0xA0)
-#define I2C_READ_WRITE_ERROR		(0xA1)
-#define I2C_CHIP_ID_INVALID			(0xA2)
-#define I2C_NO_ERROR				(0x00)
+typedef unsigned char 		uint8;
+typedef unsigned short 		uint16;
+typedef unsigned int 		uint32;
+
+#define UTIL_DEFAULT_VALUE      		(0xFFU)
+#define UTIL_SHIFT_EIGHT                (0X08U)
+
+typedef enum{
+	I2C_NO_ERROR = 0,
+	I2C_DEVICE_NOT_READY_ERROR,
+	I2C_READ_WRITE_ERROR,
+	I2C_CHIP_ID_INVALID,
+}i2c_error;
 
 
-uint8_t config_i2c_driver(struct i2c_dt_spec dev_i2c);
+i2c_error config_i2c_driver(struct i2c_dt_spec dev_i2c);
 
-uint8_t i2c_read_sensor_id(uint8_t* chipIdArray, uint8_t chipId, struct i2c_dt_spec* dev_i2c);
+i2c_error i2c_read_sensor_id(uint8_t* chipIdArray, uint8_t chipId,const struct i2c_dt_spec* dev_i2c);
 
-uint8_t i2c_sensor_config(uint8_t write_reg, uint8_t config_value, struct i2c_dt_spec* dev_i2c);
+i2c_error i2c_sensor_config(uint8_t write_reg, uint8_t config_value,const struct i2c_dt_spec* dev_i2c);
+
+i2c_error i2c_burst_read_register(uint8* received_data, uint8 data_lenght,const struct i2c_dt_spec* dev_i2c, uint8 reg);
 
 #endif
