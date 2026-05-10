@@ -2,10 +2,12 @@
 #define UTIL_HEADER
 
 
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned int uint32;
+typedef unsigned char 		uint8;
+typedef unsigned short 		uint16;
+typedef unsigned int 		uint32;
 
+#define UTIL_DEFAULT_VALUE      		(0xFFU)
+#define UTIL_SHIFT_EIGHT                (0X08U)
 
 typedef enum{
 	I2C_NO_ERROR = 0,

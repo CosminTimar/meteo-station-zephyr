@@ -25,6 +25,17 @@
 /* Bootloader registers */
 #define BL_START_APP_W      (0xF4)
 
+/* Time sync */
+#define CJMCU_START_APPLICATION_TIME        (200U)
+#define CJMCU_START_MEASURE_READING_TIME    (1200U)
+
+/* Number of bytes for the measurement register */
+#define CJMCU_MESURE_DATA_LENGHT        (0x08U)
+/* Number of bytes for the status register */
+#define CJMCU_STATUS_RW_LENGHT      	(0x01U)
+/* Config for the measurement mode: bit 4 set on 1 represent measurement every second */
+#define CJMCU_MEAS_MODE_1S          	(1<<4U)
+
 
 struct measure_mode{
     uint8 drive_mode;
