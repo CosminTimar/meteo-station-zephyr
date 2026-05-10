@@ -163,13 +163,11 @@ void producer(void)
 //K_THREAD_DEFINE(thread0_id, STACKSIZE, thread0, NULL, NULL, NULL, THREAD0_PRIORITY, 0, 5000);
 //K_THREAD_DEFINE(thread1_id, STACKSIZE, thread1, NULL, NULL, NULL,	THREAD1_PRIORITY, 0, 5000);
 
-
 int main(void)
 {
 
 	//bme_init();
-	cjmcu_init();
-
+	ml_init();
 	
 
 	return 0;
