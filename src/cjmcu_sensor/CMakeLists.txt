@@ -1,0 +1,1 @@
+target_sources(app PRIVATE cjmcu_sensor.c)
