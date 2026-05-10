@@ -1,6 +1,6 @@
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
+
 #include "bme_sensor.h"
 
 #define I2C_BME_NODE DT_NODELABEL(bme_sensor)

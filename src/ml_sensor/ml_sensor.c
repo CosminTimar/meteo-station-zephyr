@@ -1,17 +1,18 @@
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
+
 #include "ml_sensor.h"
 
 #define DT_UV_SENSOR	DT_PATH(zephyr_user)
 
-static const struct adc_dt_spec adc_channel = ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), uv_sensor);
+static const struct adc_dt_spec ml_adc_channel = ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), uv_sensor);
 
-static int16_t sample_buffer;
+static uint16 ml_sample_buffer;
+static struct ml_internal_struct ml_data;
 
-static struct adc_sequence sequance = {
-	.buffer = &sample_buffer,
-	.buffer_size = sizeof(sample_buffer),
+static struct adc_sequence ml_sequance = {
+	.buffer = &ml_sample_buffer,
+	.buffer_size = sizeof(ml_sample_buffer),
 };
 
 /* Volt defines used for offset and span */
@@ -23,6 +24,7 @@ static struct adc_sequence sequance = {
 #define ML_HIGH_UV_INTENSITY	(15.0f)
 /* UV define for index transformation */
 #define UV_INDEX_NOAA			(2.5f)
+
 
 static float voltage_to_uv_intensity(float voltage_mv)
 {
@@ -52,47 +54,61 @@ static float uv_intensity_to_index(float uv_intensity)
 
 void ml_worker()
 {
-	while(1)
+	int error = ADC_NO_ERROR;
+
+	ml_data.convertion_done = false;
+	
+	error = adc_read(ml_adc_channel.dev, &ml_sequance);
+	if(ADC_NO_ERROR != error)
 	{
-		error = adc_read(adc_channel.dev, &sequance);
-		if(0 != error)
-		{
-			return;
-		}
-
-		int32_t val_mv = sample_buffer;
-
-		error = adc_raw_to_millivolts_dt(&adc_channel, &val_mv);
-
-		if(0 > error)
-		{
-			return;
-		}
-
-		float uv_intensity = voltage_to_uv_intensity((float)val_mv);
-
-		printk("MV from sensor : %.2f \n", uv_intensity);
+		return;
 	}
+
+	uint32 val_mv = ml_sample_buffer;
+
+	error = adc_raw_to_millivolts_dt(&ml_adc_channel, &val_mv);
+
+	if(ADC_NO_ERROR > error)
+	{
+		return;
+	}
+
+	float uv_intensity = voltage_to_uv_intensity((float)val_mv);
+
+	ml_data.uv_index = uv_intensity_to_index(uv_intensity);
+
+	ml_data.convertion_done = true;
+
+}
+
+float ml_get_uv_index()
+{
+	if(ADC_NO_ERROR != ml_data.convertion_done)
+	{
+		return ADC_CONVERSION_IN_PROGRESS;
+	}
+	return ml_data.uv_index;
 }
 
 void ml_init()
 {
-	error = adc_is_ready_dt(&adc_channel);
+	int error = ADC_NO_ERROR;
+	error = adc_is_ready_dt(&ml_adc_channel);
 
-	if(1 != error)
+	if(true != error)
 	{
 		return;
 	}
 
-	error = adc_channel_setup_dt(&adc_channel);
+	error = adc_channel_setup_dt(&ml_adc_channel);
 
-	if(0 != error)
+	if(ADC_NO_ERROR != error)
 	{
 		return;
 	}
 
-	error = adc_sequence_init_dt(&adc_channel, &sequance);
-	if(0 != error)
+	error = adc_sequence_init_dt(&ml_adc_channel, &ml_sequance);
+	if(ADC_NO_ERROR != error)
 	{
 		return;
 	}
