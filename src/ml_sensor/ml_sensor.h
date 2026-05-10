@@ -6,4 +6,6 @@
 
 void ml_worker(void);
 
+void ml_init(void);
+
 #endif

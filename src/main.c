@@ -166,7 +166,7 @@ int main(void)
 {
 
 	//bme_init();
-	ml_worker();
+	ml_init();
 	
 
 	return 0;
