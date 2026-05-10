@@ -15,9 +15,9 @@ static void cjmcu_get_status()
     i2c_error error = I2C_NO_ERROR;
 
     uint8 status[] = {STATUS_REG_R};
-    uint8 res_status = 0xFF;
+    uint8 res_status = UTIL_DEFAULT_VALUE;
 
-   error = i2c_write_read_dt(&dev_i2c, status, 1, &res_status, 1);
+   error = i2c_write_read_dt(&dev_i2c, status, CJMCU_STATUS_RW_LENGHT, &res_status, CJMCU_STATUS_RW_LENGHT);
 
     if(I2C_NO_ERROR != error)
     {
@@ -31,7 +31,7 @@ static void cjmcu_config_1s_reading()
 {
     i2c_error error = I2C_NO_ERROR;
 
-    error = i2c_sensor_config(MEAS_MODE_RW,0x10,&dev_i2c);
+    error = i2c_sensor_config(MEAS_MODE_RW,CJMCU_MEAS_MODE_1S,&dev_i2c);
 
     if(I2C_NO_ERROR != error)
     {
@@ -43,17 +43,17 @@ static void cjmcu_config_1s_reading()
 static void cjmcu_read_eCO2_TVOC()
 {
     i2c_error error = I2C_NO_ERROR;
-    uint8 measured_data[8] = {0};
+    uint8 measured_data[CJMCU_MESURE_DATA_LENGHT] = {0};
     
-    error = i2c_burst_read_register(&measured_data[0],8,&dev_i2c,ALG_RESULT_DATA);
+    error = i2c_burst_read_register(&measured_data[0],CJMCU_MESURE_DATA_LENGHT,&dev_i2c,ALG_RESULT_DATA);
 
     if(I2C_NO_ERROR != error)
     {
         return;
     }
 
-    fine_data.co2_data = ((measured_data[0]<<8) | measured_data[1]);
-    fine_data.volatile_organic_compound = ((measured_data[3]<<8) | measured_data[4]);
+    fine_data.co2_data = ((measured_data[0]<<UTIL_SHIFT_EIGHT) | measured_data[1]);
+    fine_data.volatile_organic_compound = ((measured_data[3]<<UTIL_SHIFT_EIGHT) | measured_data[4]);
 
     printk("The falue of eCO2 is: %d and the TVOC is: %d\n",fine_data.co2_data ,fine_data.volatile_organic_compound );
 }
@@ -62,8 +62,6 @@ void cjmcu_worker()
 {
     cjmcu_read_eCO2_TVOC();
 }
-
-
 
 void cjmcu_init()
 {
@@ -91,14 +89,14 @@ void cjmcu_init()
         return;
     }
 
-    k_msleep(200);
+    k_msleep(CJMCU_START_APPLICATION_TIME);
 
     cjmcu_get_status();
     cjmcu_config_1s_reading();
 
     while(1)
     {
-        k_msleep(1200);
+        k_msleep(CJMCU_START_MEASURE_READING_TIME);
         cjmcu_worker();
     }
 }
