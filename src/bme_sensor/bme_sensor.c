@@ -8,6 +8,7 @@
 static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_BME_NODE);
 
 struct bme280_data bmedata;
+static bme_fine_data_type bme_fine_data;
 static int32_t t_fine;
 
 /* Read sensor calibration data and stores these into sensor data */
@@ -81,41 +82,44 @@ static int32_t bme280_compensate_pres(struct bme280_data *data, int32_t adc_pres
 
 void bme_worker(void)
 {
-    while(1)
-	{
-		uint8_t temp_val[3] = {0};
-		int ret = i2c_burst_read_dt(&dev_i2c, TEMPMSB, temp_val, 3);
+	uint8_t temp_val[3] = {0};
+	int ret = i2c_burst_read_dt(&dev_i2c, TEMPMSB, temp_val, 3);
 
-		if (ret != 0) {
-			printk("Failed to read register %x \n", TEMPMSB);
-			k_msleep(SLEEP_TIME_MS);
-		}
-
-		uint8_t press_val[3] = {0};
-		ret = i2c_burst_read_dt(&dev_i2c, PRESMSB, press_val, 3);
-		if (ret != 0) {
-			printk("Failed to read register %x \n", PRESMSB);
-			k_msleep(SLEEP_TIME_MS);
-		}
-
-		int32_t adc_temp =
-			(temp_val[0] << 12) | (temp_val[1] << 4) | ((temp_val[2] >> 4) & 0x0F);
-
-		int32_t adc_pres =
-			(press_val[0] << 12) | (press_val[1] << 4) | ((press_val[2] >> 4) & 0x0F);
-
-		int32_t comp_temp = bme280_compensate_temp(&bmedata, adc_temp);
-		int32_t comp_pres = bme280_compensate_pres(&bmedata, adc_pres);
-
-		float pressure = (float)(comp_pres /256) / 100.0f;
-
-		float temperature = (float)comp_temp / 100.0f;
-	
-		printk("Temperature in Celsius : %8.2f C\n", (double)temperature);
-		printk("Pressure in hPa is : %.2f hPa\n", (double)pressure);
-
+	if (ret != 0) {
+		printk("Failed to read register %x \n", TEMPMSB);
 		k_msleep(SLEEP_TIME_MS);
 	}
+
+	uint8_t press_val[3] = {0};
+	ret = i2c_burst_read_dt(&dev_i2c, PRESMSB, press_val, 3);
+
+	if (ret != 0) {
+		printk("Failed to read register %x \n", PRESMSB);
+		k_msleep(SLEEP_TIME_MS);
+	}
+
+	int32_t adc_temp =
+		(temp_val[0] << 12) | (temp_val[1] << 4) | ((temp_val[2] >> 4) & 0x0F);
+
+	int32_t adc_pres =
+		(press_val[0] << 12) | (press_val[1] << 4) | ((press_val[2] >> 4) & 0x0F);
+
+	int32_t comp_temp = bme280_compensate_temp(&bmedata, adc_temp);
+	int32_t comp_pres = bme280_compensate_pres(&bmedata, adc_pres);
+
+	bme_fine_data.presure = (float)(comp_pres /256) / 100.0f;
+
+	bme_fine_data.temperature = (float)comp_temp / 100.0f;
+
+	printk("Temperature in Celsius : %8.2f C\n", (double)bme_fine_data.temperature);
+	printk("Pressure in hPa is : %.2f hPa\n", (double)bme_fine_data.presure);
+
+	k_msleep(SLEEP_TIME_MS);
+}
+
+void get_bme_data(bme_fine_data_type* bme_data)
+{
+	bme_data = &bme_fine_data;
 }
 
 void bme_init(void)

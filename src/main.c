@@ -1,9 +1,11 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/kernel.h>
 #include <zephyr/random/random.h>
+
 #include "bme_sensor/bme_sensor.h"
 #include "cjmcu_sensor/cjmcu_sensor.h"
 #include "ml_sensor/ml_sensor.h"
+#include "ble_beacon/ble_beacon.h"
 
 
 
@@ -166,10 +168,13 @@ void producer(void)
 
 int main(void)
 {
-
-	//bme_init();
-	ml_init();
 	
+	bme_init();
+
+	/* after all init functions, call worker thread */
+
+	
+
 
 	return 0;
 }
