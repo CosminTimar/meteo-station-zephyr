@@ -15,7 +15,8 @@
 #define SLEEP_TIME_MS           1000
 
 /* Data structure to store BME280 data */
-struct bme280_data {
+struct bme280_data 
+{
 	/* Compensation for Temperature */
 	uint16_t dig_t1;
 	int16_t dig_t2;
@@ -32,7 +33,16 @@ struct bme280_data {
 	int16_t dig_p9;
 };
 
+typedef struct bme_fine_data
+{
+	float temperature;
+	float presure; 
+}bme_fine_data_type;
 
+/* Get a reference to the local struct that keeps the sensor data */
+void get_bme_data(bme_fine_data_type* bme_data);
+
+/* Initialize the bme280 sensor */
 void bme_init(void);
 
 #endif
