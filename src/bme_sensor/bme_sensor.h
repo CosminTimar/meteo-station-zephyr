@@ -42,6 +42,9 @@ typedef struct bme_fine_data
 /* Get a reference to the local struct that keeps the sensor data */
 void get_bme_data(bme_fine_data_type* bme_data);
 
+/* BME sensor is read and the values put in the struct */
+void bme_worker(void);
+
 /* Initialize the bme280 sensor */
 void bme_init(void);
 

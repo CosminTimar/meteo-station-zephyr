@@ -81,8 +81,10 @@ struct error_id{
     uint8 error_code;
 };
 
+void cjmcu_worker(void);
 
 void cjmcu_init(void);
+
 
 
 

@@ -93,9 +93,4 @@ void cjmcu_init()
     cjmcu_get_status();
     cjmcu_config_1s_reading();
 
-    while(1)
-    {
-        k_msleep(CJMCU_START_MEASURE_READING_TIME);
-        cjmcu_worker();
-    }
 }

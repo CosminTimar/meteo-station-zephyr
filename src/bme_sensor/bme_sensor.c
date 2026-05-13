@@ -144,7 +144,5 @@ void bme_init(void)
     if(I2C_NO_ERROR != error)
 	{
 		return;
-	}   
-
-    bme_worker();   
+	}     
 }
