@@ -8,8 +8,10 @@
 static struct ml_internal_struct
 {
     bool convertion_done;
-    float uv_index;
+    uint8_t uv_index;
 };
+
+static uint8_t standardize_data(uint8_t* env_data);
 
 void ml_worker(void);
 

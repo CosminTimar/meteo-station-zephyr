@@ -158,12 +158,27 @@ void producer(void)
 		k_msleep((sys_rand32_get() % 10) * 1000);
 	}
 }
-
+#include "util.h"
+#include "bme_sensor.h"
 
 int main(void)
 {
 	
-	bme_init();
+	/*bme_init();
+
+	uint8_t conv[10] = {0};
+
+	callback_ptr* data;
+
+	data[0](&conv[0]);
+
+	//union float_convert_union float_union;
+
+	float da1 = *(float *)(conv);
+
+	float da2 = *(float *)(&conv[4]);
+
+	printk("Magik: %.2f si %.2f", da1,da2);
 
 	/* after all init functions, call worker thread */
 

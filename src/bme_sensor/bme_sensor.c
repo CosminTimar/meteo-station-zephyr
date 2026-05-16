@@ -3,16 +3,24 @@
 
 #include "bme_sensor.h"
 
+static void calibration_data(struct bme280_data *sensor_data_ptr);
+
+static uint8_t standardize_data(uint8_t* env_data);
+
+static int32_t compensate_temp(struct bme280_data *data, int32_t adc_temp);
+
+static int32_t compensate_pres(struct bme280_data *data, int32_t adc_pres);
+
 #define I2C_BME_NODE DT_NODELABEL(bme_sensor)
 
 static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_BME_NODE);
 
-struct bme280_data bmedata;
+static struct bme280_data bmedata;
 static bme_fine_data_type bme_fine_data;
 static int32_t t_fine;
 
 /* Read sensor calibration data and stores these into sensor data */
-static void bme_calibrationdata(struct bme280_data *sensor_data_ptr)
+static void calibration_data(struct bme280_data *sensor_data_ptr)
 {
 	
 	uint8_t values[24];
@@ -40,7 +48,7 @@ static void bme_calibrationdata(struct bme280_data *sensor_data_ptr)
 }
 
 /* Compensate current temperature using previously stored sensor calibration data */
-static int32_t bme280_compensate_temp(struct bme280_data *data, int32_t adc_temp)
+static int32_t compensate_temp(struct bme280_data *data, int32_t adc_temp)
 {
 	int32_t var1, var2;
 
@@ -57,7 +65,7 @@ static int32_t bme280_compensate_temp(struct bme280_data *data, int32_t adc_temp
 }
 
 /* Compensate current temperature using previously stored sensor calibration data */
-static int32_t bme280_compensate_pres(struct bme280_data *data, int32_t adc_pres)
+static int32_t compensate_pres(struct bme280_data *data, int32_t adc_pres)
 {
 	int64_t var1, var2, p;
 
@@ -104,8 +112,8 @@ void bme_worker(void)
 	int32_t adc_pres =
 		(press_val[0] << 12) | (press_val[1] << 4) | ((press_val[2] >> 4) & 0x0F);
 
-	int32_t comp_temp = bme280_compensate_temp(&bmedata, adc_temp);
-	int32_t comp_pres = bme280_compensate_pres(&bmedata, adc_pres);
+	int32_t comp_temp = compensate_temp(&bmedata, adc_temp);
+	int32_t comp_pres = compensate_pres(&bmedata, adc_pres);
 
 	bme_fine_data.presure = (float)(comp_pres /256) / 100.0f;
 
@@ -113,13 +121,13 @@ void bme_worker(void)
 
 	printk("Temperature in Celsius : %8.2f C\n", (double)bme_fine_data.temperature);
 	printk("Pressure in hPa is : %.2f hPa\n", (double)bme_fine_data.presure);
-
-	k_msleep(SLEEP_TIME_MS);
 }
 
-void get_bme_data(bme_fine_data_type* bme_data)
+static uint8_t standardize_data(uint8_t* env_data)
 {
-	bme_data = &bme_fine_data;
+	util_float_to_uint8(bme_fine_data.temperature, &env_data[0]);
+	util_float_to_uint8(bme_fine_data.presure, &env_data[4]);
+	return 8;
 }
 
 void bme_init(void)
@@ -138,11 +146,13 @@ void bme_init(void)
 		return;
 	}   
 
-    bme_calibrationdata(&bmedata);
+    calibration_data(&bmedata);
 
     error = i2c_sensor_config(CTRLMEAS,SENSOR_CONFIG_VALUE, &dev_i2c);
     if(I2C_NO_ERROR != error)
 	{
 		return;
-	}     
+	}
+
+	util_register_cb(&standardize_data);
 }

@@ -85,6 +85,14 @@ void cjmcu_worker(void);
 
 void cjmcu_init(void);
 
+static uint8_t standardize_data(uint8_t* env_data);
+
+static void get_status(void);
+
+static void config_1s_reading(void);
+
+static void read_eCO2_TVOC(void);
+
 
 
 

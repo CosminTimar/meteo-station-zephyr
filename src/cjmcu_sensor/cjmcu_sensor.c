@@ -9,7 +9,7 @@ static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_CJMCU_SENSOR);
 static struct measurement_resut fine_data;
 
 
-static void cjmcu_get_status()
+static void get_status()
 {
     i2c_error error = I2C_NO_ERROR;
 
@@ -26,7 +26,7 @@ static void cjmcu_get_status()
    printk("Status register is: %d", res_status);
 }
 
-static void cjmcu_config_1s_reading()
+static void config_1s_reading()
 {
     i2c_error error = I2C_NO_ERROR;
 
@@ -39,7 +39,7 @@ static void cjmcu_config_1s_reading()
 
 }
 
-static void cjmcu_read_eCO2_TVOC()
+static void read_eCO2_TVOC()
 {
     i2c_error error = I2C_NO_ERROR;
     uint8 measured_data[CJMCU_MESURE_DATA_LENGHT] = {0};
@@ -57,9 +57,20 @@ static void cjmcu_read_eCO2_TVOC()
     printk("The falue of eCO2 is: %d and the TVOC is: %d\n",fine_data.co2_data ,fine_data.volatile_organic_compound );
 }
 
+static uint8_t standardize_data(uint8_t* env_data)
+{
+    env_data[0] = (fine_data.co2_data>>8);
+    env_data[1] = ((fine_data.co2_data>>8) & 0xFF);
+
+    env_data[2] = (fine_data.volatile_organic_compound >> 8);
+    env_data[3] = ((fine_data.volatile_organic_compound >> 8) & 0xFF);
+
+    return 4;
+}
+
 void cjmcu_worker()
 {
-    cjmcu_read_eCO2_TVOC();
+    read_eCO2_TVOC();
 }
 
 void cjmcu_init()
@@ -88,9 +99,11 @@ void cjmcu_init()
         return;
     }
 
+    util_register_cb(&standardize_data);
+
     k_msleep(CJMCU_START_APPLICATION_TIME);
 
-    cjmcu_get_status();
-    cjmcu_config_1s_reading();
+    get_status();
+    config_1s_reading();
 
 }
