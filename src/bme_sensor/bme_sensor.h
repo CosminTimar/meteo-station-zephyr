@@ -1,8 +1,7 @@
 #ifndef BME_SENSORS_HEADER
 #define BME_SENSORS_HEADER
 
-#include <zephyr/drivers/i2c.h>
-#include "../util/util.h"
+#include "util.h"
 
 #define CTRLMEAS                (0xF4)
 #define CALIB00	                (0x88)

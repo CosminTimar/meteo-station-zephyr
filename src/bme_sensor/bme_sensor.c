@@ -1,5 +1,5 @@
 #include <zephyr/device.h>
-#include <zephyr/kernel.h>
+#include <zephyr/drivers/i2c.h>
 
 #include "bme_sensor.h"
 

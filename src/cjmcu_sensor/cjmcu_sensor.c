@@ -1,5 +1,4 @@
 #include <zephyr/device.h>
-#include <zephyr/kernel.h>
 
 #include "cjmcu_sensor.h"
 
@@ -8,6 +7,11 @@ static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_CJMCU_SENSOR);
 
 static struct measurement_resut fine_data;
 
+static uint8_t standardize_data(uint8_t* env_data);
+
+static void get_status(void);
+
+static void config_1s_reading(void);
 
 static void get_status()
 {
@@ -39,7 +43,7 @@ static void config_1s_reading()
 
 }
 
-static void read_eCO2_TVOC()
+void cjmcu_worker()
 {
     i2c_error error = I2C_NO_ERROR;
     uint8 measured_data[CJMCU_MESURE_DATA_LENGHT] = {0};
@@ -59,18 +63,13 @@ static void read_eCO2_TVOC()
 
 static uint8_t standardize_data(uint8_t* env_data)
 {
-    env_data[0] = (fine_data.co2_data>>8);
-    env_data[1] = ((fine_data.co2_data>>8) & 0xFF);
+    env_data[0] = ((fine_data.co2_data>>8) & 0xFF);
+    env_data[1] = ((fine_data.co2_data) & 0xFF);
 
-    env_data[2] = (fine_data.volatile_organic_compound >> 8);
-    env_data[3] = ((fine_data.volatile_organic_compound >> 8) & 0xFF);
+    env_data[2] = ((fine_data.volatile_organic_compound >> 8) & 0xFF);
+    env_data[3] = ((fine_data.volatile_organic_compound) & 0xFF);
 
     return 4;
-}
-
-void cjmcu_worker()
-{
-    read_eCO2_TVOC();
 }
 
 void cjmcu_init()

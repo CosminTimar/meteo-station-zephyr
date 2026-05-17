@@ -1,9 +1,13 @@
 #include <zephyr/device.h>
-#include <zephyr/kernel.h>
+#include<zephyr/drivers/adc.h>
 
 #include "ml_sensor.h"
 
 #define DT_UV_SENSOR	DT_PATH(zephyr_user)
+
+static uint8_t standardize_data(uint8_t* env_data);
+
+static uint8_t voltage_to_uv_intensity(float voltage_mv);
 
 static const struct adc_dt_spec ml_adc_channel = ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), uv_sensor);
 
@@ -51,6 +55,7 @@ static uint8_t standardize_data(uint8_t* env_data)
 	{
 		env_data[0] = ml_data.uv_index;
 	}
+
 	return 1;
 }
 
@@ -78,6 +83,8 @@ void ml_worker()
 	ml_data.uv_index = voltage_to_uv_intensity((float)val_mv);
 
 	ml_data.convertion_done = true;
+
+	printk("The UV index is: %d\n", ml_data.uv_index);
 
 }
 

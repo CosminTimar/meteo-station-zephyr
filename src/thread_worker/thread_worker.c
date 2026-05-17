@@ -12,26 +12,32 @@
 #define INIT_THREAD_PRIORITY 1 
 #define THREAD1_PRIORITY 2
 
+K_SEM_DEFINE(thread_sem, 10, 10);
+
 
 void init_sensors_thread()
 {
-    bme_init();
-
-    //ml_init();
-
     ble_init();
 
-    //cjmcu_init();
+    bme_init();
+
+    ml_init();
+
+    cjmcu_init();
 }
 
 void sensor_worker_thread()
 {
-    bme_worker();
+    for(;;)
+    {
+        bme_worker();
 
-    //k_msleep(CJMCU_START_MEASURE_READING_TIME);
-    //cjmcu_worker();
+        k_msleep(CJMCU_START_MEASURE_READING_TIME);
+        cjmcu_worker();
 
-    //ml_worker();
+        ml_worker();
+    }
+    
 }
 
 void send_ble_data_thread()
@@ -46,7 +52,6 @@ void send_ble_data_thread()
         {
             data_lenght += cb[sensor_data_index](&sensors_data[data_lenght]);
         }
-        k_msleep(1000);
         ble_get_env_data(&sensors_data[0]);
         data_lenght=0;
     }
@@ -65,14 +70,3 @@ K_THREAD_DEFINE(send_ble_data_thread_id, STACKSIZE, send_ble_data_thread, NULL, 
 #if 0
 K_THREAD_DEFINE(send_uart_thread_id, STACKSIZE, send_uart_thread, NULL, NULL, NULL,	THREAD1_PRIORITY, 0, 5000);
 #endif
-
-
-
-
-void worker_thread()
-{
-    for(;;)
-    {
-        //k_thread_start(sensor_worker_thread_id);
-    }
-}
