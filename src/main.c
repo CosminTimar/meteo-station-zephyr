@@ -1,17 +1,13 @@
-#include <zephyr/sys/printk.h>
 #include <zephyr/kernel.h>
 #include <zephyr/random/random.h>
 
-#include "bme_sensor/bme_sensor.h"
-#include "cjmcu_sensor/cjmcu_sensor.h"
-#include "ml_sensor/ml_sensor.h"
-#include "ble_beacon/ble_beacon.h"
+#include "thread_worker/thread_worker.h"
 
 
 
 #define SLEEP_TIME_MS 1000
 
-#define STACKSIZE 1024
+
 #define WORQ_THREAD_STACK_SIZE 512
 #define THREAD0_PRIORITY 4 
 #define THREAD1_PRIORITY 4
@@ -163,18 +159,7 @@ void producer(void)
 	}
 }
 
-//K_THREAD_DEFINE(thread0_id, STACKSIZE, thread0, NULL, NULL, NULL, THREAD0_PRIORITY, 0, 5000);
-//K_THREAD_DEFINE(thread1_id, STACKSIZE, thread1, NULL, NULL, NULL,	THREAD1_PRIORITY, 0, 5000);
-
 int main(void)
 {
-	
-	bme_init();
-
-	/* after all init functions, call worker thread */
-
-	
-
-
 	return 0;
 }

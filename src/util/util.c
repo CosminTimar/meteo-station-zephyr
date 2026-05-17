@@ -3,6 +3,10 @@
 
 #include "util.h"
 
+static callback_ptr util_cb_vector[4] = {NULL};
+
+static uint8_t number_of_callbacks = 0;
+
 
 i2c_error config_i2c_driver(struct i2c_dt_spec dev_i2c)
 {
@@ -57,4 +61,34 @@ i2c_error i2c_burst_read_register(uint8* received_data, uint8 data_lenght,const 
 	}
 	return I2C_NO_ERROR;
 	
+}
+
+void util_register_cb(callback_ptr cb)
+{
+	if( NULL == cb)
+	{
+		return;
+	}
+	util_cb_vector[number_of_callbacks] = cb;
+	number_of_callbacks++;
+}
+
+uint8_t util_get_number_of_callbacks()
+{
+	return number_of_callbacks;
+}
+
+void util_get_cb_vector(callback_ptr** cb_vector)
+{
+	*cb_vector = util_cb_vector;
+}
+
+void util_float_to_uint8(float float_val, uint8_t* data)
+{
+	union float_convert_union float_union;
+	float_union.val = float_val;
+	for(uint8_t index=0; index < (sizeof(float)); index++)
+	{
+		data[index] = float_union.bytes[index];	
+	}
 }

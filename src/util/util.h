@@ -12,6 +12,9 @@ typedef unsigned int 		uint32;
 #define UTIL_DEFAULT_VALUE      		(0xFFU)
 #define UTIL_SHIFT_EIGHT                (0X08U)
 
+typedef uint8_t (* callback_ptr)(uint8_t*);
+
+
 typedef enum{
 	I2C_NO_ERROR = 0,
 	I2C_DEVICE_NOT_READY_ERROR,
@@ -26,6 +29,12 @@ typedef enum
 	ADC_CONVERSION_IN_PROGRESS = 16,
 }adc_error;
 
+union float_convert_union
+{
+	float val;
+	uint8_t bytes[sizeof(float)];
+};
+
 
 i2c_error config_i2c_driver(struct i2c_dt_spec dev_i2c);
 
@@ -34,5 +43,13 @@ i2c_error i2c_read_sensor_id(uint8_t* chipIdArray, uint8_t chipId,const struct i
 i2c_error i2c_sensor_config(uint8_t write_reg, uint8_t config_value,const struct i2c_dt_spec* dev_i2c);
 
 i2c_error i2c_burst_read_register(uint8* received_data, uint8 data_lenght,const struct i2c_dt_spec* dev_i2c, uint8 reg);
+
+void util_register_cb(callback_ptr cb);
+
+void util_get_cb_vector(callback_ptr** cb_vector);
+
+void util_float_to_uint8(float float_val, uint8_t* data);
+
+uint8_t util_get_number_of_callbacks(void);
 
 #endif

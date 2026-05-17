@@ -1,8 +1,7 @@
 #ifndef BME_SENSORS_HEADER
 #define BME_SENSORS_HEADER
 
-#include <zephyr/drivers/i2c.h>
-#include "../util/util.h"
+#include "util.h"
 
 #define CTRLMEAS                (0xF4)
 #define CALIB00	                (0x88)
@@ -39,8 +38,8 @@ typedef struct bme_fine_data
 	float presure; 
 }bme_fine_data_type;
 
-/* Get a reference to the local struct that keeps the sensor data */
-void get_bme_data(bme_fine_data_type* bme_data);
+/* BME sensor is read and the values put in the struct */
+void bme_worker(void);
 
 /* Initialize the bme280 sensor */
 void bme_init(void);

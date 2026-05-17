@@ -14,6 +14,7 @@
 
 #define BT_DATA_SOMETHING_DATA 0xA5
 
+static struct bt_le_ext_adv* adv;
 
 static unsigned char url_data[] ={0x17,'/','/','a','c','a','d','e','m','y','.',
                                  'n','o','r','d','i','c','s','e','m','i','.',
@@ -23,8 +24,8 @@ static const struct bt_data sd[] = {
     BT_DATA(BT_DATA_URI, url_data,sizeof(url_data)),    
 };
 
-static const struct bt_le_adv_param *adv_param =
-	BT_LE_ADV_PARAM(BT_LE_ADV_OPT_NONE, /* No options specified */
+static const struct bt_le_adv_param adv_param =
+	BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV, /* No options specified */
 			800, /* Min Advertising Interval 500ms (800*0.625ms) */
 			801, /* Max Advertising Interval 500.625ms (801*0.625ms) */
 			NULL); /* Set to NULL for undirected advertising */
@@ -38,24 +39,32 @@ typedef struct adv_mfg_data {
 
 static adv_mfg_data_type adv_mfg_data = { COMPANY_ID_CODE, 0x00 };
 
-typedef struct some_data{
-    uint16_t tare;
-}some_data_type;
 
-static some_data_type adv_data_Data = { 0xA5};
+static uint8_t environment_mesurements[16] = {0x00};
 
 static const struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
     BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
     BT_DATA(BT_DATA_MANUFACTURER_DATA, (unsigned char *)&adv_mfg_data, sizeof(adv_mfg_data)),
-    BT_DATA(BT_DATA_SOMETHING_DATA, (unsigned char*)& adv_data_Data, sizeof(adv_data_Data)),
+    BT_DATA(BT_DATA_SOMETHING_DATA, (unsigned char*)& environment_mesurements, sizeof(environment_mesurements)),
 };
 
 static void button_changed(uint32_t button_state, uint32_t has_changed)
 {
 	if (has_changed & button_state & USER_BUTTON) {
 		adv_mfg_data.number_press += 1;
-		bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+		bt_le_ext_adv_set_data(adv,ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+	}
+}
+
+void ble_get_env_data(uint8_t* env_data)
+{
+	memcpy(environment_mesurements,env_data,ARRAY_SIZE(environment_mesurements));
+	int error = bt_le_ext_adv_set_data(adv,ad,ARRAY_SIZE(ad),NULL,0);
+
+	if(error)
+	{
+		printk("Error %d", error);
 	}
 }
 
@@ -71,7 +80,6 @@ static int init_button(void)
 
 	return err;
 }
-
 
 void ble_init()
 {
@@ -92,11 +100,25 @@ void ble_init()
         printk("Nu sa pornit bluethooth: %d", error);
     }
 
-    error = bt_le_adv_start(adv_param, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+	error = bt_le_ext_adv_create(&adv_param,NULL,&adv);
+
+	if(error)
+	{
+		printk("Adv create naspa ceva %d", error);
+	}
+
+    error = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
 
     if (error)
     {
         printk("Adv naspa ceva %d", error);
+    }
+
+	error = bt_le_ext_adv_start(adv,NULL);
+
+	if (error)
+    {
+        printk("Adv naspa ceva start %d", error);
     }
 
     
