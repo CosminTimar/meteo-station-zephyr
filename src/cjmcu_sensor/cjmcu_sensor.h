@@ -35,6 +35,8 @@
 /* Config for the measurement mode: bit 4 set on 1 represent measurement every second */
 #define CJMCU_MEAS_MODE_1S          	(1<<4U)
 
+#define CJMCU_DATA_LENGHT  (4U)
+
 
 struct measurement_resut{
     uint16 co2_data;

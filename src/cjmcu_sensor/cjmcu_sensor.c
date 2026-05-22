@@ -1,6 +1,7 @@
 #include <zephyr/device.h>
 
 #include "cjmcu_sensor.h"
+#include "thread_worker.h"
 
 #define I2C_CJMCU_SENSOR   DT_NODELABEL(cjmcu_sensor)
 static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_CJMCU_SENSOR);
@@ -47,6 +48,8 @@ void cjmcu_worker()
 {
     i2c_error error = I2C_NO_ERROR;
     uint8 measured_data[CJMCU_MESURE_DATA_LENGHT] = {0};
+
+    thread_worker_sleep_request(CJMCU_START_MEASURE_READING_TIME);
     
     error = i2c_burst_read_register(&measured_data[0],CJMCU_MESURE_DATA_LENGHT,&dev_i2c,ALG_RESULT_DATA);
 
@@ -69,7 +72,7 @@ static uint8_t standardize_data(uint8_t* env_data)
     env_data[2] = ((fine_data.volatile_organic_compound >> 8) & 0xFF);
     env_data[3] = ((fine_data.volatile_organic_compound) & 0xFF);
 
-    return 4;
+    return CJMCU_DATA_LENGHT;
 }
 
 void cjmcu_init()

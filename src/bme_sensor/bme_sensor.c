@@ -127,7 +127,7 @@ static uint8_t standardize_data(uint8_t* env_data)
 {
 	util_float_to_uint8(bme_fine_data.temperature, &env_data[0]);
 	util_float_to_uint8(bme_fine_data.presure, &env_data[4]);
-	return 8;
+	return BME_DATA_LENGHT;
 }
 
 void bme_init(void)
