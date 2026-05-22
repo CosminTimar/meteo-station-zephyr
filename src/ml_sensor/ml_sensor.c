@@ -56,7 +56,7 @@ static uint8_t standardize_data(uint8_t* env_data)
 		env_data[0] = ml_data.uv_index;
 	}
 
-	return 1;
+	return ML_DATA_LENGHT;
 }
 
 void ml_worker()

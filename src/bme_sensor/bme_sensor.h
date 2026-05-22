@@ -11,7 +11,9 @@
 #define CHIP_ID                 (0x60)
 #define SENSOR_CONFIG_VALUE     (0x93)
 
-#define SLEEP_TIME_MS           1000
+#define SLEEP_TIME_MS           (1000U)
+
+#define BME_DATA_LENGHT			(8U)
 
 /* Data structure to store BME280 data */
 struct bme280_data 
