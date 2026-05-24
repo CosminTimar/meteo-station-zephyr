@@ -7,6 +7,7 @@
 #include "cjmcu_sensor.h"
 #include "ml_sensor.h"
 #include "ble_beacon.h"
+#include "mh_rd.h"
 
 #define STACKSIZE 1024
 #define INIT_THREAD_PRIORITY 1 
@@ -24,7 +25,11 @@ static void init_sensors_thread()
 
     ml_init();
 
+    rain_sensor_init();
+
     cjmcu_init();
+
+
 }
 
 static void sensor_worker_thread()
@@ -36,6 +41,8 @@ static void sensor_worker_thread()
         cjmcu_worker();
 
         ml_worker();
+
+        rain_worker();
     }
 }
 

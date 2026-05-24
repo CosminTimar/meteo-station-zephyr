@@ -119,8 +119,10 @@ void bme_worker(void)
 
 	bme_fine_data.temperature = (float)comp_temp / 100.0f;
 
+#if PRINT_DATA == 1
 	printk("Temperature in Celsius : %8.2f C\n", (double)bme_fine_data.temperature);
 	printk("Pressure in hPa is : %.2f hPa\n", (double)bme_fine_data.presure);
+#endif
 }
 
 static uint8_t standardize_data(uint8_t* env_data)
