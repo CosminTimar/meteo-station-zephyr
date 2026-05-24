@@ -27,8 +27,6 @@ static void get_status()
     {
         return;
     }
-
-   printk("Status register is: %d", res_status);
 }
 
 static void config_1s_reading()
@@ -59,9 +57,10 @@ void cjmcu_worker()
     }
 
     fine_data.co2_data = ((measured_data[0]<<UTIL_SHIFT_EIGHT) | measured_data[1]);
-    fine_data.volatile_organic_compound = ((measured_data[3]<<UTIL_SHIFT_EIGHT) | measured_data[4]);
-
+    fine_data.volatile_organic_compound = ((measured_data[2]<<UTIL_SHIFT_EIGHT) | measured_data[3]);
+#if PRINT_DATA == 1
     printk("The falue of eCO2 is: %d and the TVOC is: %d\n",fine_data.co2_data ,fine_data.volatile_organic_compound );
+#endif
 }
 
 static uint8_t standardize_data(uint8_t* env_data)

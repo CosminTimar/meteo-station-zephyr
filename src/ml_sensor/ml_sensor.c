@@ -83,8 +83,9 @@ void ml_worker()
 	ml_data.uv_index = voltage_to_uv_intensity((float)val_mv);
 
 	ml_data.convertion_done = true;
-
+#if PRINT_DATA == 1
 	printk("The UV index is: %d\n", ml_data.uv_index);
+#endif
 
 }
 

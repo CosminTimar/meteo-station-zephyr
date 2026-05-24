@@ -77,8 +77,9 @@ void rain_worker()
 	rain_data.rain_adc_conv = voltage_to_rain_intensity(val_mv);
 
 	rain_data.convertion_done = true;
-
+#if 1 == PRINT_DATA
 	printk("The voltige output is: %d\n", rain_data.rain_adc_conv);
+#endif
 
 }
 
