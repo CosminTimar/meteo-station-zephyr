@@ -15,7 +15,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
         case UART_TX_DONE:
         {
-        #if PRINT_DATA
+        #if IS_ENABLED(CONFIG_PRINTK)
             printk("TX done\n");
         #endif
             break;
@@ -23,7 +23,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
         case UART_TX_ABORTED:
         {
-        #if PRINT_DATA
+        #if IS_ENABLED(CONFIG_PRINTK)
             printk("TX aborted\n");
             break;
         #endif
@@ -58,15 +58,20 @@ void uart_report_worker()
 
     if(0 != error)
     {
+    #if IS_ENABLED(CONFIG_PRINTK)
         printk("Error: %d\n", error);
+    #endif
     }
 }
 
 
 void uart_report_init()
 {
-    if (!device_is_ready(uart0)) {
+    if (!device_is_ready(uart0)) 
+    {
+    #if IS_ENABLED(CONFIG_PRINTK)
         printk("UART device not ready\n");
+    #endif
     }
 
     uart_callback_set(uart0, uart_cb, NULL);

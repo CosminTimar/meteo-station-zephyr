@@ -63,28 +63,36 @@ void ble_init()
 
     if (error)
     {
+    #if IS_ENABLED(CONFIG_PRINTK)
         printk("Nu sa pornit bluethooth: %d", error);
+    #endif
     }
 
 	error = bt_le_ext_adv_create(&adv_param,NULL,&adv);
 
 	if(error)
 	{
+    #if IS_ENABLED(CONFIG_PRINTK)
 		printk("Adv create naspa ceva %d", error);
+    #endif
 	}
 
     error = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
 
     if (error)
     {
+    #if IS_ENABLED(CONFIG_PRINTK)
         printk("Adv naspa ceva %d", error);
+    #endif
     }
 
 	error = bt_le_ext_adv_start(adv,NULL);
 
 	if (error)
     {
+    #if IS_ENABLED(CONFIG_PRINTK)
         printk("Adv naspa ceva start %d", error);
+    #endif
     }
 }
 
