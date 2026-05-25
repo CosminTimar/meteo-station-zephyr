@@ -39,11 +39,11 @@
 
 
 struct measurement_resut{
-    uint16 co2_data;
-    uint16 volatile_organic_compound;
-    uint8 status;
-    uint8 error;
-    uint8 raw_data;
+    uint16_t co2_data;
+    uint16_t volatile_organic_compound;
+    uint8_t status;
+    uint8_t error;
+    uint8_t raw_data;
 };
 
 void cjmcu_worker(void);

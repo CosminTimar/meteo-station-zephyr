@@ -3,7 +3,7 @@
 
 #include "util.h"
 
-static callback_ptr util_cb_vector[4] = {NULL};
+static callback_ptr util_cb_vector[NUMBER_OF_SENSORS] = {NULL};
 
 static uint8_t number_of_callbacks = 0;
 
@@ -49,7 +49,7 @@ i2c_error i2c_sensor_config(uint8_t write_reg, uint8_t config_value,const struct
 	return I2C_NO_ERROR;
 }
 
-i2c_error i2c_burst_read_register(uint8* received_data, uint8 data_lenght,const struct i2c_dt_spec* dev_i2c, uint8 reg)
+i2c_error i2c_burst_read_register(uint8_t* received_data, uint8_t data_lenght,const struct i2c_dt_spec* dev_i2c, uint8_t reg)
 {
 
 	int error = i2c_burst_read_dt(dev_i2c, reg, received_data, data_lenght);

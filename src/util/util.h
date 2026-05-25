@@ -4,15 +4,12 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/i2c.h>
 
-
-typedef unsigned char 		uint8;
-typedef unsigned short 		uint16;
-typedef unsigned int 		uint32;
-
 #define UTIL_DEFAULT_VALUE      		(0xFFU)
 #define UTIL_SHIFT_EIGHT                (0X08U)
 
 #define PRINT_DATA 						(1U)
+
+#define NUMBER_OF_SENSORS				(4U)
 
 typedef uint8_t (* callback_ptr)(uint8_t*);
 
@@ -28,7 +25,7 @@ typedef enum
 {
     ADC_NO_ERROR = 0,
     ADC_INTERNAL_ERROR,
-	ADC_CONVERSION_IN_PROGRESS = 16,
+	ADC_CONVERSION_IN_PROGRESS,
 }adc_error;
 
 union float_convert_union
@@ -44,7 +41,7 @@ i2c_error i2c_read_sensor_id(uint8_t* chipIdArray, uint8_t chipId,const struct i
 
 i2c_error i2c_sensor_config(uint8_t write_reg, uint8_t config_value,const struct i2c_dt_spec* dev_i2c);
 
-i2c_error i2c_burst_read_register(uint8* received_data, uint8 data_lenght,const struct i2c_dt_spec* dev_i2c, uint8 reg);
+i2c_error i2c_burst_read_register(uint8_t* received_data, uint8_t data_lenght,const struct i2c_dt_spec* dev_i2c, uint8_t reg);
 
 void util_register_cb(callback_ptr cb);
 
