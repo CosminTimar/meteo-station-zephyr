@@ -30,7 +30,9 @@ static void calibration_data(struct bme280_data *sensor_data_ptr)
 
 	if (error != I2C_NO_ERROR) {
 		uart_report_add_error(I2C_READ_WRITE_ERROR);
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to read register %x \n", CALIB00);
+	#endif
 		return;
 	}
 
@@ -97,7 +99,9 @@ void bme_worker(void)
 
 	if (error != 0) {
 		uart_report_add_error(I2C_READ_WRITE_ERROR);
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to read register %x \n", TEMPMSB);
+	#endif
 		return;
 	}
 
@@ -106,7 +110,9 @@ void bme_worker(void)
 
 	if (error != 0) {
 		uart_report_add_error(I2C_READ_WRITE_ERROR);
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to read register %x \n", PRESMSB);
+	#endif
 		return;
 	}
 
@@ -123,7 +129,7 @@ void bme_worker(void)
 
 	bme_fine_data.temperature = (float)comp_temp / 100.0f;
 
-#if PRINT_DATA == 1
+#if IS_ENABLED(CONFIG_PRINTK)
 	printk("Temperature in Celsius : %8.2f C\n", (double)bme_fine_data.temperature);
 	printk("Pressure in hPa is : %.2f hPa\n", (double)bme_fine_data.presure);
 #endif

@@ -1,5 +1,4 @@
 #include <zephyr/kernel.h>
-#include <zephyr/random/random.h>
 
 #include "thread_worker/thread_worker.h"
 

@@ -10,8 +10,11 @@ static uint8_t number_of_callbacks = 0;
 
 i2c_error config_i2c_driver(struct i2c_dt_spec dev_i2c)
 {
-	if (!device_is_ready(dev_i2c.bus)) {
+	if (!device_is_ready(dev_i2c.bus))
+	{
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("I2C bus %s is not ready!\n\r",dev_i2c.bus->name);
+	#endif
 		return I2C_DEVICE_NOT_READY_ERROR;
 	}
 	return I2C_NO_ERROR;
@@ -22,13 +25,19 @@ i2c_error i2c_read_sensor_id(uint8_t* chipIdArray, uint8_t chipId,const struct i
 	uint8_t id = 0xFF;
 	int error = i2c_write_read_dt(dev_i2c, chipIdArray, 1, &id, 1);
 
-	if (I2C_NO_ERROR != error) {
+	if (I2C_NO_ERROR != error) 
+	{
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to read register %x \n", chipIdArray[0]);
+	#endif
 		return I2C_READ_WRITE_ERROR;
 	}
 
-	if (id != chipId) {
+	if (id != chipId) 
+	{
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Invalid chip id! %x \n", id);
+	#endif
 		return I2C_CHIP_ID_INVALID;
 	}
 	
@@ -42,8 +51,11 @@ i2c_error i2c_sensor_config(uint8_t write_reg, uint8_t config_value,const struct
 
 	int error = i2c_write_dt(dev_i2c, sensor_config, 2);
 
-	if (I2C_NO_ERROR != error) {
+	if (I2C_NO_ERROR != error) 
+	{
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to write register %x \n", sensor_config[0]);
+	#endif
 		return I2C_READ_WRITE_ERROR;
 	}
 	return I2C_NO_ERROR;
@@ -56,7 +68,9 @@ i2c_error i2c_burst_read_register(uint8_t* received_data, uint8_t data_lenght,co
 
 	if (I2C_NO_ERROR != error) 
 	{
+	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to read register %c \n", reg);
+	#endif
 		return I2C_READ_WRITE_ERROR;
 	}
 	return I2C_NO_ERROR;

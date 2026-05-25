@@ -7,8 +7,6 @@
 #define UTIL_DEFAULT_VALUE      		(0xFFU)
 #define UTIL_SHIFT_EIGHT                (0X08U)
 
-#define PRINT_DATA 						(1U)
-
 #define NUMBER_OF_SENSORS				(4U)
 
 typedef uint8_t (* callback_ptr)(uint8_t*);

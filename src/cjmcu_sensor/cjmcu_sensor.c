@@ -62,7 +62,7 @@ void cjmcu_worker()
 
     fine_data.co2_data = ((measured_data[0]<<UTIL_SHIFT_EIGHT) | measured_data[1]);
     fine_data.volatile_organic_compound = ((measured_data[2]<<UTIL_SHIFT_EIGHT) | measured_data[3]);
-#if PRINT_DATA == 1
+#if IS_ENABLED(CONFIG_PRINTK)
     printk("The falue of eCO2 is: %d and the TVOC is: %d\n",fine_data.co2_data ,fine_data.volatile_organic_compound );
 #endif
 }
