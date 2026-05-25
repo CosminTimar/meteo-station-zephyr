@@ -2,6 +2,7 @@
 
 #include "cjmcu_sensor.h"
 #include "thread_worker.h"
+#include "uart_report.h"
 
 #define I2C_CJMCU_SENSOR   DT_NODELABEL(cjmcu_sensor)
 static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C_CJMCU_SENSOR);
@@ -18,13 +19,14 @@ static void get_status()
 {
     i2c_error error = I2C_NO_ERROR;
 
-    uint8 status[] = {STATUS_REG_R};
-    uint8 res_status = UTIL_DEFAULT_VALUE;
+    uint8_t status[] = {STATUS_REG_R};
+    uint8_t res_status = UTIL_DEFAULT_VALUE;
 
    error = i2c_write_read_dt(&dev_i2c, status, CJMCU_STATUS_RW_LENGHT, &res_status, CJMCU_STATUS_RW_LENGHT);
 
     if(I2C_NO_ERROR != error)
     {
+        uart_report_add_error(error);
         return;
     }
 }
@@ -37,6 +39,7 @@ static void config_1s_reading()
 
     if(I2C_NO_ERROR != error)
     {
+        uart_report_add_error(error);
         return;
     }
 
@@ -45,7 +48,7 @@ static void config_1s_reading()
 void cjmcu_worker()
 {
     i2c_error error = I2C_NO_ERROR;
-    uint8 measured_data[CJMCU_MESURE_DATA_LENGHT] = {0};
+    uint8_t measured_data[CJMCU_MESURE_DATA_LENGHT] = {0};
 
     thread_worker_sleep_request(CJMCU_START_MEASURE_READING_TIME);
     
@@ -53,6 +56,7 @@ void cjmcu_worker()
 
     if(I2C_NO_ERROR != error)
     {
+        uart_report_add_error(error);
         return;
     }
 
@@ -77,12 +81,13 @@ static uint8_t standardize_data(uint8_t* env_data)
 void cjmcu_init()
 {
     i2c_error error = I2C_NO_ERROR;
-    uint8 chipId[] = {HW_ID_R};
+    uint8_t chipId[] = {HW_ID_R};
     
     error = config_i2c_driver(dev_i2c);
 
     if(I2C_NO_ERROR != error)
     {
+        uart_report_add_error(error);
         return;
     }
 
@@ -90,13 +95,15 @@ void cjmcu_init()
 
     if(I2C_NO_ERROR != error)
     {
+        uart_report_add_error(error);
         return;
     }
-    uint8 reg_data = BL_START_APP_W;
+    uint8_t reg_data = BL_START_APP_W;
     error = i2c_write_dt(&dev_i2c,&reg_data,1);
 
     if(I2C_NO_ERROR != error)
     {
+        uart_report_add_error(error);
         return;
     }
 
