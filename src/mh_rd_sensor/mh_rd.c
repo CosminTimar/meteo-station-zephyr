@@ -2,6 +2,7 @@
 #include<zephyr/drivers/adc.h>
 
 #include "mh_rd.h"
+#include "uart_report.h"
 
 #define DT_UV_SENSOR	DT_PATH(zephyr_user)
 
@@ -17,7 +18,7 @@ static uint8_t standardize_data(uint8_t* env_data);
 
 static const struct adc_dt_spec rain_adc_channel = ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), rain_sensor);
 
-static uint16 rain_sample_buffer;
+static uint16_t rain_sample_buffer;
 static struct rain_internal_struct rain_data;
 
 static struct adc_sequence rain_sequance = {
@@ -62,15 +63,17 @@ void rain_worker()
 	error = adc_read(rain_adc_channel.dev, &rain_sequance);
 	if(ADC_NO_ERROR != error)
 	{
+		uart_report_add_error(ADC_CONVERSION_IN_PROGRESS);
 		return;
 	}
 
-	uint32 val_mv = rain_sample_buffer;
+	uint32_t val_mv = rain_sample_buffer;
 
 	error = adc_raw_to_millivolts_dt(&rain_adc_channel, &val_mv);
 
 	if(ADC_NO_ERROR > error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 
@@ -90,6 +93,7 @@ void rain_sensor_init()
 
 	if(true != error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 
@@ -97,12 +101,14 @@ void rain_sensor_init()
 
 	if(ADC_NO_ERROR != error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 
 	error = adc_sequence_init_dt(&rain_adc_channel, &rain_sequance);
 	if(ADC_NO_ERROR != error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 

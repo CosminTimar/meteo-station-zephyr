@@ -2,6 +2,7 @@
 #include <zephyr/drivers/i2c.h>
 
 #include "bme_sensor.h"
+#include "uart_report.h"
 
 static void calibration_data(struct bme280_data *sensor_data_ptr);
 
@@ -25,9 +26,10 @@ static void calibration_data(struct bme280_data *sensor_data_ptr)
 	
 	uint8_t values[24];
 
-	int ret = i2c_burst_read_dt(&dev_i2c, CALIB00, values, 24);
+	int error = i2c_burst_read_dt(&dev_i2c, CALIB00, values, 24);
 
-	if (ret != 0) {
+	if (error != I2C_NO_ERROR) {
+		uart_report_add_error(I2C_READ_WRITE_ERROR);
 		printk("Failed to read register %x \n", CALIB00);
 		return;
 	}
@@ -91,19 +93,21 @@ static int32_t compensate_pres(struct bme280_data *data, int32_t adc_pres)
 void bme_worker(void)
 {
 	uint8_t temp_val[3] = {0};
-	int ret = i2c_burst_read_dt(&dev_i2c, TEMPMSB, temp_val, 3);
+	int error = i2c_burst_read_dt(&dev_i2c, TEMPMSB, temp_val, 3);
 
-	if (ret != 0) {
+	if (error != 0) {
+		uart_report_add_error(I2C_READ_WRITE_ERROR);
 		printk("Failed to read register %x \n", TEMPMSB);
-		k_msleep(SLEEP_TIME_MS);
+		return;
 	}
 
 	uint8_t press_val[3] = {0};
-	ret = i2c_burst_read_dt(&dev_i2c, PRESMSB, press_val, 3);
+	error = i2c_burst_read_dt(&dev_i2c, PRESMSB, press_val, 3);
 
-	if (ret != 0) {
+	if (error != 0) {
+		uart_report_add_error(I2C_READ_WRITE_ERROR);
 		printk("Failed to read register %x \n", PRESMSB);
-		k_msleep(SLEEP_TIME_MS);
+		return;
 	}
 
 	int32_t adc_temp =
@@ -135,16 +139,18 @@ static uint8_t standardize_data(uint8_t* env_data)
 void bme_init(void)
 {
     uint8_t regs[] = {ID_REG};
-	uint8_t error = config_i2c_driver(dev_i2c);
+	i2c_error error = config_i2c_driver(dev_i2c);
 
     if(I2C_NO_ERROR != error)
 	{
+		uart_report_add_error(error);
 		return;
 	}   
 
     error = i2c_read_sensor_id(regs, CHIP_ID, &dev_i2c);
     if(I2C_NO_ERROR != error)
 	{
+		uart_report_add_error(error);
 		return;
 	}   
 
@@ -153,6 +159,7 @@ void bme_init(void)
     error = i2c_sensor_config(CTRLMEAS,SENSOR_CONFIG_VALUE, &dev_i2c);
     if(I2C_NO_ERROR != error)
 	{
+		uart_report_add_error(error);
 		return;
 	}
 

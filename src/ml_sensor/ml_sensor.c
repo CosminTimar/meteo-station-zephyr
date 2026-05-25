@@ -2,6 +2,7 @@
 #include<zephyr/drivers/adc.h>
 
 #include "ml_sensor.h"
+#include "uart_report.h"
 
 #define DT_UV_SENSOR	DT_PATH(zephyr_user)
 
@@ -11,7 +12,7 @@ static uint8_t voltage_to_uv_intensity(float voltage_mv);
 
 static const struct adc_dt_spec ml_adc_channel = ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), uv_sensor);
 
-static uint16 ml_sample_buffer;
+static uint16_t ml_sample_buffer;
 static struct ml_internal_struct ml_data;
 
 static struct adc_sequence ml_sequance = {
@@ -68,15 +69,17 @@ void ml_worker()
 	error = adc_read(ml_adc_channel.dev, &ml_sequance);
 	if(ADC_NO_ERROR != error)
 	{
+		uart_report_add_error(ADC_CONVERSION_IN_PROGRESS);
 		return;
 	}
 
-	uint32 val_mv = ml_sample_buffer;
+	uint32_t val_mv = ml_sample_buffer;
 
 	error = adc_raw_to_millivolts_dt(&ml_adc_channel, &val_mv);
 
 	if(ADC_NO_ERROR > error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 
@@ -96,6 +99,7 @@ void ml_init()
 
 	if(true != error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 
@@ -103,12 +107,14 @@ void ml_init()
 
 	if(ADC_NO_ERROR != error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 
 	error = adc_sequence_init_dt(&ml_adc_channel, &ml_sequance);
 	if(ADC_NO_ERROR != error)
 	{
+		uart_report_add_error(ADC_INTERNAL_ERROR);
 		return;
 	}
 
