@@ -14,13 +14,6 @@ typedef enum{
     ILLIGAL_ZONE
 }rain_intensity_e;
 
-static struct rain_internal_struct
-{
-    bool convertion_done;
-    rain_intensity_e rain_adc_conv;
-};
-
-
 void rain_sensor_init(void);
 
 void rain_worker(void);

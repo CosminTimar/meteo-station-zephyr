@@ -83,10 +83,7 @@ void thread_worker_sleep_request(uint32_t ms_time)
     k_msleep(ms_time);
 }
 
-
-#if 0
 K_THREAD_DEFINE(init_sensors_thread_id, STACKSIZE, init_sensors_thread, NULL, NULL, NULL, INIT_THREAD_PRIORITY, 0, 0);
 K_THREAD_DEFINE(sensor_worker_thread_id, STACKSIZE, sensor_worker_thread, NULL, NULL, NULL,	WORKER_THREAD_PRIORITY, 0, 2000);
 K_THREAD_DEFINE(send_ble_data_thread_id, STACKSIZE, send_ble_data_thread, NULL, NULL, NULL,	BLE_THREAD_PRIORITY, 0, 3000);
-#endif
 K_THREAD_DEFINE(send_uart_thread_id, STACKSIZE, send_uart_thread, NULL, NULL, NULL,	UART_REPORT_PRIORITY, 0, 1000);
