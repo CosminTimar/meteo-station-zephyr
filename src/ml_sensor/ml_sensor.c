@@ -13,12 +13,17 @@ static uint8_t voltage_to_uv_intensity(float voltage_mv);
 static const struct adc_dt_spec ml_adc_channel = ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), uv_sensor);
 
 static uint16_t ml_sample_buffer;
-static struct ml_internal_struct ml_data;
 
 static struct adc_sequence ml_sequance = {
 	.buffer = &ml_sample_buffer,
 	.buffer_size = sizeof(ml_sample_buffer),
 };
+
+struct ml_internal_struct
+{
+    bool convertion_done;
+    uint8_t uv_index;
+}ml_internal_struct;
 
 /* Volt defines used for offset and span */
 #define ML_MV_TO_VOLT			(1000.0f)
@@ -48,13 +53,13 @@ static uint8_t voltage_to_uv_intensity(float voltage_mv)
 
 static uint8_t standardize_data(uint8_t* env_data)
 {
-	if(true != ml_data.convertion_done)
+	if(true != ml_internal_struct.convertion_done)
 	{
 		env_data[0] = ADC_CONVERSION_IN_PROGRESS;
 	}
 	else
 	{
-		env_data[0] = ml_data.uv_index;
+		env_data[0] = ml_internal_struct.uv_index;
 	}
 
 	return ML_DATA_LENGHT;
@@ -64,7 +69,7 @@ void ml_worker()
 {
 	int error = ADC_NO_ERROR;
 
-	ml_data.convertion_done = false;
+	ml_internal_struct.convertion_done = false;
 	
 	error = adc_read(ml_adc_channel.dev, &ml_sequance);
 	if(ADC_NO_ERROR != error)
@@ -83,11 +88,11 @@ void ml_worker()
 		return;
 	}
 
-	ml_data.uv_index = voltage_to_uv_intensity((float)val_mv);
+	ml_internal_struct.uv_index = voltage_to_uv_intensity((float)val_mv);
 
-	ml_data.convertion_done = true;
+	ml_internal_struct.convertion_done = true;
 #if IS_ENABLED(CONFIG_PRINTK)
-	printk("The UV index is: %d\n", ml_data.uv_index);
+	printk("The UV index is: %d\n", ml_internal_struct.uv_index);
 #endif
 
 }
