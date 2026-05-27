@@ -8,7 +8,6 @@
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
 
 #define BT_DATA_SOMETHING_DATA      (0xA5U)
-#define BT_DATA_PAYLOAD_LENGHT      (16U)
 #define COMPANY_ID_CODE             (0x0059)
 
 static struct bt_le_ext_adv* adv;
@@ -24,7 +23,7 @@ typedef struct adv_mfg_data {
 } adv_mfg_data_type;
 
 static adv_mfg_data_type adv_mfg_data = { COMPANY_ID_CODE };
-static uint8_t environment_mesurements[BT_DATA_PAYLOAD_LENGHT] = {0x00};
+static uint8_t environment_mesurements[CONFIG_BLE_DATA_LENGHT] = {0x00};
 
 static struct bt_data bt_extended_adv[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
@@ -40,7 +39,7 @@ void ble_get_env_data(uint8_t* env_data)
 
 	if(error)
 	{
-		printk("Error %d", error);
+		printk("BLE Advertising set of data failed: %d", error);
 	}
 }
 
@@ -51,7 +50,7 @@ void ble_init()
     if (error)
     {
     #if IS_ENABLED(CONFIG_PRINTK)
-        printk("Nu sa pornit bluethooth: %d", error);
+        printk("BLE did not started: %d", error);
     #endif
     }
 
@@ -60,7 +59,7 @@ void ble_init()
 	if(error)
 	{
     #if IS_ENABLED(CONFIG_PRINTK)
-		printk("Adv create naspa ceva %d", error);
+		printk("BLE Advertaising creation failed: %d", error);
     #endif
 	}
 
@@ -69,7 +68,7 @@ void ble_init()
     if (error)
     {
     #if IS_ENABLED(CONFIG_PRINTK)
-        printk("Adv naspa ceva %d", error);
+        printk("BLE Advertising setup failed: %d", error);
     #endif
     }
 
@@ -78,7 +77,7 @@ void ble_init()
 	if (error)
     {
     #if IS_ENABLED(CONFIG_PRINTK)
-        printk("Adv naspa ceva start %d", error);
+        printk("BLE Advertising start failed: %d", error);
     #endif
     }
 }

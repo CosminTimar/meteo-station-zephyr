@@ -1,0 +1,46 @@
+#Kconfig
+
+mainmenu "Meteo Station Config"
+
+menu "Meteo Station"
+
+  config BLE_DATA_LENGHT
+    int "Max number of bytes to be send on ble"
+    default 16
+    help
+      Max number of bytes to be send on ble. This is to be increased if more data is added
+
+  config BME_SENSOR_ENABLE
+    bool "Enable the BME sensor"
+    default y
+    help
+      This can be used to enable or disable the BME sensor
+
+  config CJMCU_SENSOR_ENABLE
+    bool "Enable the CJMCU sensor"
+    default y
+    help
+      This can be used to enable or disable the CJMCU sensor
+
+  config MH_RD_SENSOR_ENABLE
+    bool "Enable the MH_RD sensor"
+    default y
+    help
+      This can be used to enable or disable the MH_RD sensor
+
+  config ML_SENSOR_ENABLE
+    bool "Enable the ML sensor"
+    default y
+    help
+      This can be used to enable or disable the ML sensor
+
+  config UART_REPORT_ENABLE
+    bool "Enable the uart comm"
+    default y
+    help
+      This can be used to enable or disable the uart comm for error report
+
+
+endmenu
+
+source "Kconfig.zephyr"
