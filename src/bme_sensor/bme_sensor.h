@@ -3,18 +3,6 @@
 
 #include "util.h"
 
-#define CTRLMEAS                (0xF4)
-#define CALIB00	                (0x88)
-#define ID_REG	                (0xD0)
-#define TEMPMSB	                (0xFA)
-#define PRESMSB	                (0xF7)
-#define CHIP_ID                 (0x60)
-#define SENSOR_CONFIG_VALUE     (0x93)
-
-#define SLEEP_TIME_MS           (1000U)
-
-#define BME_DATA_LENGHT			(8U)
-
 /* Data structure to store BME280 data */
 struct bme280_data 
 {

@@ -10,11 +10,17 @@
 #include "mh_rd.h"
 #include "uart_report.h"
 
-#define STACKSIZE 1024
-#define INIT_THREAD_PRIORITY 1 
-#define BLE_THREAD_PRIORITY 2
-#define WORKER_THREAD_PRIORITY 3
-#define UART_REPORT_PRIORITY   4
+/* Stack size for threads */
+#define STACKSIZE               (1024)
+/* Defines for thread prio */
+#define INIT_THREAD_PRIORITY    (1) 
+#define BLE_THREAD_PRIORITY     (2)
+#define WORKER_THREAD_PRIORITY  (3)
+#define UART_REPORT_PRIORITY    (4)
+
+#define BLE_DATA_LENGHT         (16U)
+
+#define THREAD_SLEEP_MS         (1000U)
 
 static void init_sensors_thread(void);
 static void send_ble_data_thread(void);
@@ -32,8 +38,6 @@ static void init_sensors_thread()
     cjmcu_init();
 
     uart_report_init();
-
-
 }
 
 static void sensor_worker_thread()
@@ -52,7 +56,7 @@ static void sensor_worker_thread()
 
 static void send_ble_data_thread()
 {
-    uint8_t sensors_data[16] = {0U};
+    uint8_t sensors_data[BLE_DATA_LENGHT] = {0U};
     callback_ptr* cb = NULL;
     uint8_t data_lenght = 0;
     util_get_cb_vector(&cb);
@@ -65,7 +69,7 @@ static void send_ble_data_thread()
         ble_get_env_data(&sensors_data[0]);
         data_lenght=0;
 
-        thread_worker_sleep_request(1000);
+        thread_worker_sleep_request(THREAD_SLEEP_MS);
     }
 }
 
@@ -74,7 +78,7 @@ static void send_uart_thread()
     for(;;)
     {
         uart_report_worker();
-        thread_worker_sleep_request(1000);
+        thread_worker_sleep_request(THREAD_SLEEP_MS);
     }
 }
 

@@ -8,6 +8,4 @@ void ble_init(void);
 void ble_get_env_data(uint8_t* env_data);
 
 
-
-
 #endif 
