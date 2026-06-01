@@ -20,12 +20,19 @@ struct bme280_data
 	int16_t dig_p7;
 	int16_t dig_p8;
 	int16_t dig_p9;
+	uint8_t dig_h1;
+	int16_t dig_h2;
+	uint8_t dig_h3;
+	int16_t dig_h4;
+	int16_t dig_h5;
+	int8_t  dig_h6;
 };
 
 typedef struct bme_fine_data
 {
 	float temperature;
 	float presure; 
+	float humidity;
 }bme_fine_data_type;
 
 /* BME sensor is read and the values put in the struct */
