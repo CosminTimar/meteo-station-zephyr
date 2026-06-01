@@ -6,7 +6,7 @@ menu "Meteo Station"
 
   config BLE_DATA_LENGHT
     int "Max number of bytes to be send on ble"
-    default 16
+    default 18
     help
       Max number of bytes to be send on ble. This is to be increased if more data is added
 
