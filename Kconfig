@@ -40,7 +40,11 @@ menu "Meteo Station"
     help
       This can be used to enable or disable the uart comm for error report
 
-
+  config NUMBER_OF_CB
+    int "Number of cb used"
+    default 4
+    help
+      This represent the number of the callbacks needed. If another sensor will be added, this need to be increased in order to send new data
 endmenu
 
 source "Kconfig.zephyr"

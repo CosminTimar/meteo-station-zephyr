@@ -4,7 +4,7 @@
 
 void uart_report_init(void);
 
-void uart_report_add_error(char error);
+void uart_report_add_error(uint8_t error);
 
 void uart_report_worker();
 

@@ -33,6 +33,7 @@ typedef struct bme_fine_data
 	float temperature;
 	float presure; 
 	float humidity;
+	uint8_t error;
 }bme_fine_data_type;
 
 /* BME sensor is read and the values put in the struct */
