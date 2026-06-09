@@ -4,9 +4,11 @@
 #include "uart_report.h"
 #include "util.h"
 
+#define UART_PAYLOAD_LENGHT (CONFIG_NUMBER_OF_CB + UTIL_BLE_ERRORS)
+
 const struct device *uart0 = DEVICE_DT_GET(DT_NODELABEL(uart0));
 
-static char uart_payload[NUMBER_OF_SENSORS] = {0U};
+static uint8_t uart_payload[UART_PAYLOAD_LENGHT] = {0U};
 
 static void uart_cb(const struct device *dev, struct uart_event *evt, void *user_data)
 {
@@ -36,12 +38,12 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
     }
 }
 
-void uart_report_add_error(char error)
+void uart_report_add_error(uint8_t error)
 {
     static uint8_t error_index = 0;
     uart_payload[error_index] = error;
 
-    if( error_index <= NUMBER_OF_SENSORS)
+    if( error_index <= UART_PAYLOAD_LENGHT)
     {
         error_index++;
     }
@@ -54,7 +56,7 @@ void uart_report_add_error(char error)
 
 void uart_report_worker()
 {
-    int error = uart_tx(uart0,uart_payload,NUMBER_OF_SENSORS,100);
+    int error = uart_tx(uart0,uart_payload,UART_PAYLOAD_LENGHT,100);
 
     if(0 != error)
     {

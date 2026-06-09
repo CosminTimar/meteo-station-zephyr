@@ -19,6 +19,7 @@ static uint8_t standardize_data(uint8_t* env_data);
 static const struct adc_dt_spec rain_adc_channel = ADC_DT_SPEC_GET_BY_NAME(DT_PATH(zephyr_user), rain_sensor);
 
 static uint16_t rain_sample_buffer;
+static uint8_t  rain_error;
 
 static struct adc_sequence rain_sequance = {
 	.buffer = &rain_sample_buffer,
@@ -61,61 +62,75 @@ static rain_intensity_e voltage_to_rain_intensity(uint32_t voltage_mv)
 
 void rain_worker()
 {
-	int error = ADC_NO_ERROR;
-
-	rain_internal_struct.convertion_done = false;
-	
-	error = adc_read(rain_adc_channel.dev, &rain_sequance);
-	if(ADC_NO_ERROR != error)
+	if(util_get_init_error(rain_error))
 	{
-		uart_report_add_error(ADC_CONVERSION_IN_PROGRESS);
-		return;
+		int error = ADC_NO_ERROR;
+
+		rain_internal_struct.convertion_done = false;
+		
+		error = adc_read(rain_adc_channel.dev, &rain_sequance);
+		if(ADC_NO_ERROR != error)
+		{
+			rain_error |= 1U << ADC_CONVERSION_IN_PROGRESS;
+		}
+
+		uint32_t val_mv = rain_sample_buffer;
+
+		error = adc_raw_to_millivolts_dt(&rain_adc_channel, &val_mv);
+
+		if(ADC_NO_ERROR > error)
+		{
+			rain_error |= 1U << ADC_INTERNAL_ERROR;
+		}
+
+		rain_internal_struct.rain_adc_conv = voltage_to_rain_intensity(val_mv);
+
+		rain_internal_struct.convertion_done = true;
+
+		if(ADC_NO_ERROR != rain_error)
+		{
+		#if IS_ENABLED(CONFIG_UART_REPORT_ENABLE)
+			uart_report_add_error(rain_error);
+		#endif
+		}
+	#if IS_ENABLED(CONFIG_PRINTK)
+		printk("The voltige output is: %d\n", rain_internal_struct.rain_adc_conv);
+	#endif
 	}
-
-	uint32_t val_mv = rain_sample_buffer;
-
-	error = adc_raw_to_millivolts_dt(&rain_adc_channel, &val_mv);
-
-	if(ADC_NO_ERROR > error)
+	else
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
-		return;
+		/* Nothing to do. There was an init error */
 	}
-
-	rain_internal_struct.rain_adc_conv = voltage_to_rain_intensity(val_mv);
-
-	rain_internal_struct.convertion_done = true;
-#if IS_ENABLED(CONFIG_PRINTK)
-	printk("The voltige output is: %d\n", rain_internal_struct.rain_adc_conv);
-#endif
-
 }
 
 void rain_sensor_init()
 {
 	int error = ADC_NO_ERROR;
+	rain_error = ADC_NO_ERROR;
 	error = adc_is_ready_dt(&rain_adc_channel);
 
 	if(true != error)
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
-		return;
+		rain_error |= 1U << ADC_INTERNAL_ERROR;
 	}
 
 	error = adc_channel_setup_dt(&rain_adc_channel);
 
 	if(ADC_NO_ERROR != error)
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
-		return;
+		rain_error |= 1U << ADC_INTERNAL_ERROR;
 	}
 
 	error = adc_sequence_init_dt(&rain_adc_channel, &rain_sequance);
 	if(ADC_NO_ERROR != error)
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
-		return;
+		rain_error |= 1U << ADC_INTERNAL_ERROR;
 	}
 
+	if(ADC_NO_ERROR != rain_error)
+	{
+		uart_report_add_error(rain_error);
+		return;
+	}
 	util_register_cb(&standardize_data);
 }

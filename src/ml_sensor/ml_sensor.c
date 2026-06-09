@@ -23,6 +23,7 @@ struct ml_internal_struct
 {
     bool convertion_done;
     uint8_t uv_index;
+	uint8_t error;
 }ml_internal_struct;
 
 /* Volt defines used for offset and span */
@@ -67,59 +68,76 @@ static uint8_t standardize_data(uint8_t* env_data)
 
 void ml_worker()
 {
-	int error = ADC_NO_ERROR;
-
-	ml_internal_struct.convertion_done = false;
-	
-	error = adc_read(ml_adc_channel.dev, &ml_sequance);
-	if(ADC_NO_ERROR != error)
+	if(util_get_init_error(ml_internal_struct.error))
 	{
-		uart_report_add_error(ADC_CONVERSION_IN_PROGRESS);
-		return;
+		int error = ADC_NO_ERROR;
+
+		ml_internal_struct.convertion_done = false;
+		
+		error = adc_read(ml_adc_channel.dev, &ml_sequance);
+		if(ADC_NO_ERROR != error)
+		{
+			ml_internal_struct.error |= 1U << ADC_CONVERSION_IN_PROGRESS;
+		}
+
+		uint32_t val_mv = ml_sample_buffer;
+
+		error = adc_raw_to_millivolts_dt(&ml_adc_channel, &val_mv);
+
+		if(ADC_NO_ERROR > error)
+		{
+			ml_internal_struct.error |= 1U << ADC_INTERNAL_ERROR;
+		}
+
+		ml_internal_struct.uv_index = voltage_to_uv_intensity((float)val_mv);
+
+		ml_internal_struct.convertion_done = true;
+	#if IS_ENABLED(CONFIG_PRINTK)
+		printk("The UV index is: %d\n", ml_internal_struct.uv_index);
+	#endif
+		if(ADC_NO_ERROR != ml_internal_struct.error)
+		{
+		#if IS_ENABLED(CONFIG_UART_REPORT_ENABLE)
+			uart_report_add_error(ml_internal_struct.error);
+		#endif
+		}
 	}
-
-	uint32_t val_mv = ml_sample_buffer;
-
-	error = adc_raw_to_millivolts_dt(&ml_adc_channel, &val_mv);
-
-	if(ADC_NO_ERROR > error)
+	else
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
-		return;
+		/* Nothing to do. There was an init error */
 	}
-
-	ml_internal_struct.uv_index = voltage_to_uv_intensity((float)val_mv);
-
-	ml_internal_struct.convertion_done = true;
-#if IS_ENABLED(CONFIG_PRINTK)
-	printk("The UV index is: %d\n", ml_internal_struct.uv_index);
-#endif
 
 }
 
 void ml_init()
 {
 	int error = ADC_NO_ERROR;
+	ml_internal_struct.error = ADC_NO_ERROR;
 	error = adc_is_ready_dt(&ml_adc_channel);
 
 	if(true != error)
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
-		return;
+		ml_internal_struct.error |= 1U << ADC_INTERNAL_ERROR;
 	}
 
 	error = adc_channel_setup_dt(&ml_adc_channel);
 
 	if(ADC_NO_ERROR != error)
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
-		return;
+		ml_internal_struct.error |= 1U << ADC_INTERNAL_ERROR;
 	}
 
 	error = adc_sequence_init_dt(&ml_adc_channel, &ml_sequance);
 	if(ADC_NO_ERROR != error)
 	{
-		uart_report_add_error(ADC_INTERNAL_ERROR);
+		ml_internal_struct.error |= 1U << ADC_INTERNAL_ERROR;
+	}
+
+	if(ADC_NO_ERROR != 0)
+	{
+	#if IS_ENABLED(CONFIG_UART_REPORT_ENABLE)
+		uart_report_add_error(ml_internal_struct.error);
+	#endif
 		return;
 	}
 

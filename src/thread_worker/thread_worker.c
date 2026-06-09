@@ -3,12 +3,22 @@
 
 #include "thread_worker.h"
 #include "util.h"
-#include "bme_sensor.h"
-#include "cjmcu_sensor.h"
-#include "ml_sensor.h"
-#include "ble_beacon.h"
-#include "mh_rd.h"
-#include "uart_report.h"
+#if IS_ENABLED(CONFIG_BME_SENSOR_ENABLE)
+    #include "bme_sensor.h"
+#endif
+#if IS_ENABLED(CONFIG_CJMCU_SENSOR_ENABLE)
+    #include "cjmcu_sensor.h"
+#endif
+#if IS_ENABLED(CONFIG_ML_SENSOR_ENABLE)
+    #include "ml_sensor.h"
+#endif
+    #include "ble_beacon.h"
+#if IS_ENABLED(CONFIG_MH_RD_SENSOR_ENABLE)
+    #include "mh_rd.h"
+#endif
+#if IS_ENABLED(CONFIG_UART_REPORT_ENABLE)
+    #include "uart_report.h"
+#endif
 
 /* Stack size for threads */
 #define STACKSIZE               (1024)

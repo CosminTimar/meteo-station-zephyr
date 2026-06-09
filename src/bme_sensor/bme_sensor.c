@@ -62,7 +62,7 @@ static void calibration_data(struct bme280_data *sensor_data_ptr)
 	int error = i2c_burst_read_dt(&dev_i2c, CALIB00, values, BME_CALIB00_DATA_LENGHT);
 
 	if (error != I2C_NO_ERROR) {
-		uart_report_add_error(I2C_READ_WRITE_ERROR);
+		bme_fine_data.error |= 1U << I2C_READ_WRITE_ERROR;
 	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to read register %x \n", CALIB00);
 	#endif
@@ -88,7 +88,7 @@ static void calibration_data(struct bme280_data *sensor_data_ptr)
 	error = i2c_burst_read_dt(&dev_i2c, CALIB01, &values[25], BME_CALIB01_DATA_LENGHT);
 
 	if (error != I2C_NO_ERROR) {
-		uart_report_add_error(I2C_READ_WRITE_ERROR);
+		bme_fine_data.error |= 1U << I2C_READ_WRITE_ERROR;
 	#if IS_ENABLED(CONFIG_PRINTK)
 		printk("Failed to read register %x \n", CALIB01);
 	#endif
@@ -172,61 +172,72 @@ static int32_t compensate_hum(struct bme280_data *data, int32_t comp_hum)
 
 void bme_worker(void)
 {
-	uint8_t temp_val[BME_ENV_REG_DATA_LENGHT] = {0};
-	int error = i2c_burst_read_dt(&dev_i2c, TEMPMSB, temp_val, BME_ENV_REG_DATA_LENGHT);
+	if(util_get_init_error(bme_fine_data.error))
+	{
+		uint8_t temp_val[BME_ENV_REG_DATA_LENGHT] = {0};
+		int error = i2c_burst_read_dt(&dev_i2c, TEMPMSB, temp_val, BME_ENV_REG_DATA_LENGHT);
 
-	if (error != 0) {
-		uart_report_add_error(I2C_READ_WRITE_ERROR);
+		if (error != 0) {
+			bme_fine_data.error |= 1U << I2C_READ_WRITE_ERROR;
+		#if IS_ENABLED(CONFIG_PRINTK)
+			printk("Failed to read register %x \n", TEMPMSB);
+		#endif
+		}
+
+		uint8_t press_val[BME_ENV_REG_DATA_LENGHT] = {0};
+		error = i2c_burst_read_dt(&dev_i2c, PRESMSB, press_val, BME_ENV_REG_DATA_LENGHT);
+
+		if (error != 0) {
+			bme_fine_data.error |= 1U << I2C_READ_WRITE_ERROR;
+		#if IS_ENABLED(CONFIG_PRINTK)
+			printk("Failed to read register %x \n", PRESMSB);
+		#endif
+		}
+
+		uint8_t hum_val[BME_HUMIDITY_DATA_LENGHT] = {0};
+		error = i2c_burst_read_dt(&dev_i2c, HUMMSB, hum_val, BME_HUMIDITY_DATA_LENGHT);
+
+		if (error != 0) {
+			bme_fine_data.error |= 1U << I2C_READ_WRITE_ERROR;
+		#if IS_ENABLED(CONFIG_PRINTK)
+			printk("Failed to read register %x \n", PRESMSB);
+		#endif
+		}
+
+		int32_t comp_temp = (temp_val[0] << 12) | (temp_val[1] << 4) | ((temp_val[2] >> 4) & 0x0F);
+
+		int32_t comp_pres = (press_val[0] << 12) | (press_val[1] << 4) | ((press_val[2] >> 4) & 0x0F);
+
+		int32_t comp_hum = ((hum_val[0] << 8) | (hum_val[1] & 0xFF));
+
+		comp_temp = compensate_temp(&bmedata, comp_temp);
+		comp_pres = compensate_pres(&bmedata, comp_pres);
+		comp_hum  = compensate_hum(&bmedata, comp_hum);
+		
+
+		bme_fine_data.presure = (float)(comp_pres / BME_PRESSURE_Q24_TO_HPA);
+
+		bme_fine_data.temperature = (float)comp_temp / BME_TEMPERATURE_CENTIDEGREE_TO_DEGREE;
+
+		bme_fine_data.humidity = (float)(comp_hum) / BME_HUMIDITY_Q22_10_SCALE;
+
+		if(I2C_NO_ERROR != bme_fine_data.error)
+		{
+		#if IS_ENABLED(CONFIG_UART_REPORT_ENABLE)
+			uart_report_add_error(bme_fine_data.error);
+		#endif
+		}
+
 	#if IS_ENABLED(CONFIG_PRINTK)
-		printk("Failed to read register %x \n", TEMPMSB);
+		printk("Temperature in Celsius : %8.2f C\n", (double)bme_fine_data.temperature);
+		printk("Pressure in hPa is : %.2f hPa\n", (double)bme_fine_data.presure);
+		printk("Humidity in RH is : %.2f %% RH\n", (double)bme_fine_data.humidity);
 	#endif
-		return;
 	}
-
-	uint8_t press_val[BME_ENV_REG_DATA_LENGHT] = {0};
-	error = i2c_burst_read_dt(&dev_i2c, PRESMSB, press_val, BME_ENV_REG_DATA_LENGHT);
-
-	if (error != 0) {
-		uart_report_add_error(I2C_READ_WRITE_ERROR);
-	#if IS_ENABLED(CONFIG_PRINTK)
-		printk("Failed to read register %x \n", PRESMSB);
-	#endif
-		return;
+	else
+	{
+		/* Do nothing. There was an init error */
 	}
-
-	uint8_t hum_val[BME_HUMIDITY_DATA_LENGHT] = {0};
-	error = i2c_burst_read_dt(&dev_i2c, HUMMSB, hum_val, BME_HUMIDITY_DATA_LENGHT);
-
-	if (error != 0) {
-		uart_report_add_error(I2C_READ_WRITE_ERROR);
-	#if IS_ENABLED(CONFIG_PRINTK)
-		printk("Failed to read register %x \n", PRESMSB);
-	#endif
-		return;
-	}
-
-	int32_t comp_temp = (temp_val[0] << 12) | (temp_val[1] << 4) | ((temp_val[2] >> 4) & 0x0F);
-
-	int32_t comp_pres = (press_val[0] << 12) | (press_val[1] << 4) | ((press_val[2] >> 4) & 0x0F);
-
-	int32_t comp_hum = ((hum_val[0] << 8) | (hum_val[1] & 0xFF));
-
-	comp_temp = compensate_temp(&bmedata, comp_temp);
-	comp_pres = compensate_pres(&bmedata, comp_pres);
-	comp_hum  = compensate_hum(&bmedata, comp_hum);
-	
-
-	bme_fine_data.presure = (float)(comp_pres / BME_PRESSURE_Q24_TO_HPA);
-
-	bme_fine_data.temperature = (float)comp_temp / BME_TEMPERATURE_CENTIDEGREE_TO_DEGREE;
-
-	bme_fine_data.humidity = (float)(comp_hum) / BME_HUMIDITY_Q22_10_SCALE;
-
-#if IS_ENABLED(CONFIG_PRINTK)
-	printk("Temperature in Celsius : %8.2f C\n", (double)bme_fine_data.temperature);
-	printk("Pressure in hPa is : %.2f hPa\n", (double)bme_fine_data.presure);
-	printk("Humidity in RH is : %.2f %% RH\n", (double)bme_fine_data.humidity);
-#endif
 }
 
 static uint8_t standardize_data(uint8_t* env_data)
@@ -240,19 +251,19 @@ static uint8_t standardize_data(uint8_t* env_data)
 void bme_init(void)
 {
     uint8_t regs[] = {ID_REG};
-	i2c_error error = config_i2c_driver(dev_i2c);
+	bme_fine_data.error = I2C_NO_ERROR;
+	util_modules_error error = config_i2c_driver(dev_i2c);
+
 
     if(I2C_NO_ERROR != error)
 	{
-		uart_report_add_error(error);
-		return;
+		bme_fine_data.error |= 1U << error;
 	}   
 
     error = i2c_read_sensor_id(regs, CHIP_ID, &dev_i2c);
     if(I2C_NO_ERROR != error)
 	{
-		uart_report_add_error(error);
-		return;
+		bme_fine_data.error |= 1U << error;
 	}   
 
     calibration_data(&bmedata);
@@ -260,7 +271,15 @@ void bme_init(void)
     error = i2c_sensor_config(CTRLMEAS,SENSOR_CONFIG_VALUE, &dev_i2c);
     if(I2C_NO_ERROR != error)
 	{
-		uart_report_add_error(error);
+		bme_fine_data.error |= 1U << error;
+	}
+
+	if(0 != bme_fine_data.error)
+	{
+	#if IS_ENABLED(CONFIG_UART_REPORT_ENABLE)
+		uart_report_add_error(bme_fine_data.error);
+	#endif
+		bme_fine_data.error |= 1U << I2C_NO_ERROR;
 		return;
 	}
 
